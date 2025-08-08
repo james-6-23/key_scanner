@@ -10,7 +10,7 @@ on:
 
 env:
   REGISTRY: ghcr.io
-  IMAGE_NAME: hajimi-king
+  IMAGE_NAME: key-scanner
 
 jobs:
   build-and-push:

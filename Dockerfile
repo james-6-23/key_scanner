@@ -1,74 +1,51 @@
-# 多阶段构建以优化镜像大小
-FROM python:3.11-slim as builder
-
-# 设置构建时的环境变量
-ENV PYTHONDONTWRITEBYTECODE=1 \
-    PYTHONUNBUFFERED=1 \
-    PIP_NO_CACHE_DIR=1 \
-    PIP_DISABLE_PIP_VERSION_CHECK=1
-
-# 安装构建依赖
-RUN apt-get update && apt-get install -y --no-install-recommends \
-    build-essential \
-    && rm -rf /var/lib/apt/lists/*
-
-# 创建虚拟环境
-RUN python -m venv /opt/venv
-ENV PATH="/opt/venv/bin:$PATH"
-
-# 复制依赖文件
-COPY pyproject.toml ./
-
-# 安装Python依赖
-RUN pip install --upgrade pip && \
-    pip install uv && \
-    uv pip install --system -r pyproject.toml
-
-# 最终运行阶段
+# 使用Python 3.11 slim镜像作为基础
 FROM python:3.11-slim
 
-# 设置运行时环境变量
+# 设置环境变量
 ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
-    PYTHONPATH=/app \
-    PATH="/opt/venv/bin:$PATH" \
-    # 默认环境变量
+    UV_SYSTEM_PYTHON=1 \
+    UV_NO_CACHE=1 \
+    PATH="/root/.local/bin:$PATH" \
+    # 应用环境变量
     DATA_PATH=/app/data \
-    QUERIES_FILE=queries.txt
+    QUERIES_FILE=/app/queries.txt
 
-# 安装运行时依赖
+# 安装系统依赖和UV
 RUN apt-get update && apt-get install -y --no-install-recommends \
+    git \
     curl \
     ca-certificates \
     && rm -rf /var/lib/apt/lists/* \
-    && useradd -m -u 1000 appuser
+    && curl -LsSf https://astral.sh/uv/install.sh | sh
 
 # 设置工作目录
 WORKDIR /app
 
-# 从构建阶段复制虚拟环境
-COPY --from=builder /opt/venv /opt/venv
+# 克隆项目代码（或者复制本地代码）
+# 如果使用本地代码，取消注释下面的COPY命令，注释掉git clone
+# COPY . /app/
 
-# 复制应用代码
-COPY --chown=appuser:appuser . .
+# 从GitHub克隆最新代码
+RUN git clone https://github.com/james-6-23/key_scanner.git /tmp/scanner \
+    && cp -r /tmp/scanner/* /app/ \
+    && rm -rf /tmp/scanner
 
-# 创建必要的目录
-RUN mkdir -p /app/data/keys /app/data/logs /app/data/cache && \
-    chown -R appuser:appuser /app/data
+# 使用UV安装Python依赖
+RUN uv pip install --system \
+    google-generativeai>=0.8.5 \
+    python-dotenv>=1.1.1 \
+    requests>=2.32.4
 
-# 创建健康检查脚本
-RUN echo '#!/bin/sh\npgrep -f "hajimi_king" > /dev/null || exit 1' > /healthcheck.sh && \
-    chmod +x /healthcheck.sh
+# 创建必要的目录结构
+RUN mkdir -p /app/data/keys /app/data/logs /app/data/cache
 
-# 切换到非root用户
-USER appuser
-
-# 健康检查
+# 设置健康检查
 HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
-    CMD /healthcheck.sh
+    CMD pgrep -f "api_key_scanner" || exit 1
 
-# 数据卷
-VOLUME ["/app/data"]
+# 数据卷挂载点
+VOLUME ["/app/data", "/app/queries.txt", "/app/.env"]
 
-# 启动命令 - 支持选择不同版本
+# 启动命令
 CMD ["python", "app/api_key_scanner.py"]
