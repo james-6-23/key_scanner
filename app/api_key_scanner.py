@@ -25,8 +25,8 @@ from utils.file_manager import file_manager, Checkpoint, checkpoint
 from utils.sync_utils import sync_utils
 from utils.parallel_validator import ParallelKeyValidator, get_parallel_validator
 
-# 创建GitHub工具实例和文件管理器
-github_utils = GitHubClient.create_instance(Config.GITHUB_TOKENS)
+# 创建GitHub工具实例（使用新的TokenManager）
+github_utils = GitHubClient.create_instance(use_token_manager=True)
 
 # 创建并行验证器实例
 parallel_validator = get_parallel_validator(max_workers=10)
@@ -392,7 +392,15 @@ def main():
     # 3. 显示系统信息
     search_queries = file_manager.get_search_queries()
     logger.info("📋 SYSTEM INFORMATION:")
-    logger.info(f"🔑 GitHub tokens: {len(Config.GITHUB_TOKENS)} configured")
+    
+    # 显示Token状态
+    token_status = github_utils.get_token_status()
+    if "total_tokens" in token_status:
+        logger.info(f"🔑 GitHub tokens: {token_status['total_tokens']} configured")
+        if "active_tokens" in token_status:
+            logger.info(f"   Active tokens: {token_status['active_tokens']}")
+            logger.info(f"   Total remaining calls: {token_status.get('total_remaining_calls', 'N/A')}")
+    
     logger.info(f"🔍 Search queries: {len(search_queries)} loaded")
     logger.info(f"📅 Date filter: {Config.DATE_RANGE_DAYS} days")
     if Config.PROXY_LIST:
@@ -534,6 +542,12 @@ def main():
             
             # 显示最终验证统计
             print_validation_stats()
+            
+            # 显示Token状态
+            if loop_count % 5 == 0:  # 每5个循环显示一次
+                token_summary = github_utils.get_token_status()
+                if "active_tokens" in token_summary:
+                    logger.info(f"📊 Token Status - Active: {token_summary['active_tokens']}/{token_summary['total_tokens']}, Remaining calls: {token_summary.get('total_remaining_calls', 'N/A')}")
 
             logger.info(f"💤 Sleeping for 10 seconds...")
             time.sleep(10)

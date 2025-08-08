@@ -214,10 +214,28 @@ class FileManager:
     def load_search_queries(self, queries_file_path: str) -> List[str]:
         """从文件中加载搜索查询列表"""
         queries = []
-        full_path = os.path.join(self.data_dir, queries_file_path)
-
-        if not os.path.exists(full_path):
-            self._create_default_queries_file(full_path)
+        
+        # 优先从项目根目录读取queries.txt
+        # 如果是绝对路径，直接使用；否则先尝试根目录，再尝试data目录
+        if os.path.isabs(queries_file_path):
+            full_path = queries_file_path
+        else:
+            # 先尝试项目根目录
+            root_path = queries_file_path
+            if os.path.exists(root_path):
+                full_path = root_path
+                logger.info(f"Loading queries from root directory: {root_path}")
+            else:
+                # 兼容旧版本：尝试data目录
+                full_path = os.path.join(self.data_dir, queries_file_path)
+                if os.path.exists(full_path):
+                    logger.info(f"Loading queries from data directory: {full_path}")
+                else:
+                    # 如果都不存在，使用根目录路径（不自动创建）
+                    full_path = root_path
+                    logger.error(f"Queries file not found: {full_path}")
+                    logger.error(f"Please create {queries_file_path} in the project root directory")
+                    return queries
 
         try:
             with open(full_path, "r", encoding="utf-8") as f:
@@ -225,6 +243,7 @@ class FileManager:
                     line = line.strip()
                     if line and not line.startswith('#'):
                         queries.append(line)
+            logger.info(f"Successfully loaded {len(queries)} queries from {full_path}")
         except Exception as e:
             logger.error(f"Failed to read {full_path}: {e}")
             logger.info("Using empty query list")
@@ -449,21 +468,10 @@ class FileManager:
     # ================================
 
     def _create_default_queries_file(self, queries_file: str) -> None:
-        """创建默认的查询文件"""
-        try:
-            os.makedirs(os.path.dirname(queries_file), exist_ok=True)
-            with open(queries_file, "w", encoding="utf-8") as f:
-                f.write("# GitHub搜索查询配置文件\n")
-                f.write("# 每行一个查询语句，支持GitHub搜索语法\n")
-                f.write("# 以#开头的行为注释，空行会被忽略\n")
-                f.write("\n")
-                f.write("# 基础API密钥搜索\n")
-                f.write("AIzaSy in:file\n")
-                f.write("AIzaSy in:file filename:.env\n")
-                f.write("AIzaSy in:file filename:env.example\n")
-            logger.info(f"Created default queries file: {queries_file}")
-        except Exception as e:
-            logger.error(f"Failed to create default queries file {queries_file}: {e}")
+        """[已废弃] 不再自动创建查询文件，需要用户手动提供"""
+        logger.warning(f"Auto-creation of queries file is disabled.")
+        logger.warning(f"Please manually create {queries_file} in the project root directory.")
+        logger.warning(f"You can copy queries.example to queries.txt as a starting point.")
 
     def _need_filename_update(self, basename: str, prefix: str, current_date: str, current_hour: str) -> bool:
         """检查是否需要更新文件名"""
