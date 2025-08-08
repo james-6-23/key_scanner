@@ -59,6 +59,12 @@ cd key_scanner
 curl -LsSf https://astral.sh/uv/install.sh | sh
 
 # 3. 创建虚拟环境并安装依赖
+# 使用快速搭建脚本（推荐）
+./setup_python_env.sh
+
+# 或手动安装依赖：
+
+# 使用UV（推荐）
 uv venv
 source .venv/bin/activate  # Windows: .venv\Scripts\activate
 uv pip install -r requirements.txt
@@ -78,7 +84,14 @@ cp env.example .env
 cp queries.example queries.txt
 
 # 6. 运行程序
+# 激活虚拟环境（如果未激活）
+source .venv/bin/activate  # Windows: .venv\Scripts\activate
+
+# 运行主程序
 python app/api_key_scanner.py
+
+# 运行Token健康监控工具
+python token_health_monitor.py github_tokens.txt
 ```
 
 ### 方式三：使用外部WARP代理
@@ -311,6 +324,7 @@ ghp_ghi...    ✗ Invalid   0%      0          0.0%
 | **主扫描器** | API密钥扫描和验证 | `python app/api_key_scanner.py` |
 | **Token健康监控** | Token健康检查和监控 | `python token_health_monitor.py` |
 | **快速部署脚本** | Docker一键部署 | `./quick_start.sh` |
+| **环境搭建脚本** | Python环境快速搭建 | `./setup_python_env.sh` |
 
 ##  许可证
 
