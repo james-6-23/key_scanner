@@ -142,9 +142,13 @@ class TokenManager:
         if not token:
             return False
         
-        # 经典token格式：40个字符的十六进制
-        # 新token格式：ghp_ 开头
+        # 支持多种token格式：
+        # 1. 经典token格式：40个字符的十六进制
+        # 2. 新token格式：ghp_ 开头
+        # 3. GitHub PAT v2格式：github_pat_ 开头
         if token.startswith('ghp_') and len(token) > 10:
+            return True
+        if token.startswith('github_pat_') and len(token) > 20:
             return True
         if len(token) == 40 and all(c in '0123456789abcdef' for c in token.lower()):
             return True
