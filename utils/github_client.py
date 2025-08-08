@@ -1,29 +1,75 @@
 import base64
 import random
 import time
-from typing import Dict, List, Optional, Any
+from typing import Dict, List, Optional, Any, Tuple
 
 import requests
 
 from common.Logger import logger
 from common.config import Config
+from utils.token_manager import TokenManager, init_token_manager, get_token_manager, TokenStatus
 
 
 class GitHubClient:
     GITHUB_API_URL = "https://api.github.com/search/code"
 
-    def __init__(self, tokens: List[str]):
-        self.tokens = [token.strip() for token in tokens if token.strip()]
-        self._token_ptr = 0
+    def __init__(self, tokens: Optional[List[str]] = None, use_token_manager: bool = True):
+        """
+        初始化GitHub客户端
+        
+        Args:
+            tokens: 传统的token列表（用于向后兼容）
+            use_token_manager: 是否使用TokenManager
+        """
+        self.use_token_manager = use_token_manager
+        
+        if use_token_manager:
+            # 使用TokenManager
+            try:
+                self.token_manager = get_token_manager()
+            except RuntimeError:
+                # TokenManager未初始化，初始化它
+                logger.info("🔧 Initializing TokenManager...")
+                self.token_manager = init_token_manager(
+                    env_tokens=Config.GITHUB_TOKENS_STR,
+                    tokens_file=Config.GITHUB_TOKENS_FILE,
+                    use_external_file=Config.USE_EXTERNAL_TOKEN_FILE,
+                    archive_dir=Config.TOKEN_ARCHIVE_DIR,
+                    auto_remove_exhausted=Config.TOKEN_AUTO_REMOVE_EXHAUSTED,
+                    min_remaining_calls=Config.TOKEN_MIN_REMAINING_CALLS
+                )
+            logger.info(f"✅ Using TokenManager with {len(self.token_manager.tokens)} tokens")
+        else:
+            # 传统模式（向后兼容）
+            if tokens is None:
+                tokens = Config.get_github_tokens()
+            self.tokens = [token.strip() for token in tokens if token.strip()]
+            self._token_ptr = 0
+            logger.info(f"📝 Using traditional token rotation with {len(self.tokens)} tokens")
 
-    def _next_token(self) -> Optional[str]:
-        if not self.tokens:
-            return None
-
-        token = self.tokens[self._token_ptr % len(self.tokens)]
-        self._token_ptr += 1
-
-        return token.strip() if isinstance(token, str) else token
+    def _next_token(self) -> Optional[Tuple[str, Optional[TokenStatus]]]:
+        """
+        获取下一个可用的token
+        
+        Returns:
+            (token, status) 元组，status在传统模式下为None
+        """
+        if self.use_token_manager:
+            result = self.token_manager.get_next_token()
+            if result:
+                return result
+            else:
+                logger.error("❌ No available tokens from TokenManager")
+                return None, None
+        else:
+            # 传统模式
+            if not self.tokens:
+                return None, None
+            
+            token = self.tokens[self._token_ptr % len(self.tokens)]
+            self._token_ptr += 1
+            
+            return token.strip() if isinstance(token, str) else token, None
 
     def search_for_keys(self, query: str, max_retries: int = 5) -> Dict[str, Any]:
         all_items = []
@@ -41,7 +87,12 @@ class GitHubClient:
             page_success = False
 
             for attempt in range(1, max_retries + 1):
-                current_token = self._next_token()
+                token_result = self._next_token()
+                if not token_result:
+                    logger.error("❌ No tokens available")
+                    break
+                    
+                current_token, token_status = token_result
 
                 headers = {
                     "Accept": "application/vnd.github.v3+json",
@@ -66,10 +117,23 @@ class GitHubClient:
                         response = requests.get(self.GITHUB_API_URL, headers=headers, params=params, timeout=30, proxies=proxies)
                     else:
                         response = requests.get(self.GITHUB_API_URL, headers=headers, params=params, timeout=30)
+                    
+                    # 更新token状态（如果使用TokenManager）
+                    if self.use_token_manager and token_status:
+                        self.token_manager.update_token_status(
+                            current_token,
+                            dict(response.headers),
+                            success=response.status_code == 200
+                        )
+                    
                     rate_limit_remaining = response.headers.get('X-RateLimit-Remaining')
                     # 只在剩余次数很少时警告
                     if rate_limit_remaining and int(rate_limit_remaining) < 3:
-                        logger.warning(f"⚠️ Rate limit low: {rate_limit_remaining} remaining, token: {current_token}")
+                        if token_status:
+                            logger.warning(f"⚠️ Rate limit low: {rate_limit_remaining} remaining, token: {token_status.masked_token}")
+                        else:
+                            logger.warning(f"⚠️ Rate limit low: {rate_limit_remaining} remaining")
+                    
                     response.raise_for_status()
                     page_result = response.json()
                     page_success = True
@@ -78,6 +142,15 @@ class GitHubClient:
                 except requests.exceptions.HTTPError as e:
                     status = e.response.status_code if e.response else None
                     failed_requests += 1
+                    
+                    # 更新token失败状态
+                    if self.use_token_manager and token_status and current_token:
+                        self.token_manager.update_token_status(
+                            current_token,
+                            dict(e.response.headers) if e.response else {},
+                            success=False
+                        )
+                    
                     if status in (403, 429):
                         rate_limit_hits += 1
                         wait = min(2 ** attempt + random.uniform(0, 1), 60)
@@ -165,9 +238,14 @@ class GitHubClient:
             "Accept": "application/vnd.github.v3+json",
         }
 
-        token = self._next_token()
-        if token:
-            headers["Authorization"] = f"token {token}"
+        token_result = self._next_token()
+        if token_result:
+            token, token_status = token_result
+            if token:
+                headers["Authorization"] = f"token {token}"
+        else:
+            token = None
+            token_status = None
 
         try:
             # 获取proxy配置
@@ -178,7 +256,15 @@ class GitHubClient:
                 metadata_response = requests.get(metadata_url, headers=headers, proxies=proxies)
             else:
                 metadata_response = requests.get(metadata_url, headers=headers)
-
+            
+            # 更新token状态
+            if self.use_token_manager and token_status and token:
+                self.token_manager.update_token_status(
+                    token,
+                    dict(metadata_response.headers),
+                    success=metadata_response.status_code == 200
+                )
+            
             metadata_response.raise_for_status()
             file_metadata = metadata_response.json()
 
@@ -209,9 +295,34 @@ class GitHubClient:
             return content_response.text
 
         except requests.exceptions.RequestException as e:
+            # 更新token失败状态
+            if self.use_token_manager and token_status and token:
+                self.token_manager.update_token_status(
+                    token,
+                    {},
+                    success=False
+                )
             logger.error(f"❌ Failed to fetch file content: {metadata_url}, {type(e).__name__}")
             return None
 
     @staticmethod
-    def create_instance(tokens: List[str]) -> 'GitHubClient':
-        return GitHubClient(tokens)
+    def create_instance(tokens: Optional[List[str]] = None, use_token_manager: bool = True) -> 'GitHubClient':
+        """
+        创建GitHubClient实例
+        
+        Args:
+            tokens: token列表（可选，用于向后兼容）
+            use_token_manager: 是否使用TokenManager（默认True）
+        """
+        return GitHubClient(tokens, use_token_manager)
+    
+    def get_token_status(self) -> Dict[str, Any]:
+        """获取token状态摘要"""
+        if self.use_token_manager:
+            return self.token_manager.get_status_summary()
+        else:
+            return {
+                "mode": "traditional",
+                "total_tokens": len(self.tokens),
+                "current_index": self._token_ptr
+            }
