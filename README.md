@@ -21,9 +21,44 @@ API密钥扫描器是一个专门用于在GitHub上发现和验证Google API密�
 - 🔄 **外部同步** - 支持与外部服务同步发现的密钥
 - 🔑 **智能Token管理** - 双模式配置，自动生命周期管理
 
+## 🆕 最新更新
+
+### 改进版扫描器
+我们推出了改进版扫描器，解决了数据丢失和Token不一致的问题：
+
+- **实时数据保存** - 每找到密钥立即保存到磁盘
+- **优雅退出** - Ctrl+C会保存进度后安全退出
+- **统一Token管理** - 所有组件使用相同的Token源
+- **诊断工具** - 快速检查系统配置问题
+
+```bash
+# 运行诊断工具
+python diagnose_issues.py
+
+# 使用改进版扫描器
+python app/api_key_scanner_improved.py
+```
+
+详见 [改进版扫描器指南](IMPROVED_SCANNER_GUIDE.md)
+
 ## 🚀 快速开始
 
-### 方式一：Docker部署（推荐）
+### 方式一：统一启动器（最新推荐）
+```bash
+# Linux/Mac
+./unified_launcher.sh
+
+# Windows
+unified_launcher.bat
+```
+
+启动器提供交互式菜单，可选择：
+- Docker容器部署
+- 本地环境运行
+- 系统诊断
+- 配置验证
+
+### 方式二：Docker部署
 
 最简单的部署方式，集成WARP代理，无需担心网络限制：
 
@@ -46,7 +81,7 @@ docker-compose up -d
 docker-compose logs -f
 ```
 
-### 方式二：本地部署
+### 方式三：本地部署
 
 如果您已经有可用的代理服务，可以选择本地部署：
 
@@ -254,6 +289,21 @@ python token_health_monitor.py github_tokens.txt --continuous
 - 多代理轮换
 - 自动重试机制
 
+## 🔧 故障排除
+
+如果遇到以下问题：
+
+### 数据未保存
+- 使用改进版扫描器：`python app/api_key_scanner_improved.py`
+- 使用Ctrl+C优雅退出，不要强制终止
+
+### Token数量不一致
+- 运行诊断工具：`python diagnose_issues.py`
+- 检查所有组件使用相同的Token配置
+
+### 详细故障排除
+参见 [改进版扫描器指南](IMPROVED_SCANNER_GUIDE.md)
+
 ## 📊 运行效果
 
 ```
@@ -322,7 +372,10 @@ ghp_ghi...    ✗ Invalid   0%      0          0.0%
 | 工具 | 功能 | 使用方法 |
 |------|------|----------|
 | **主扫描器** | API密钥扫描和验证 | `python app/api_key_scanner.py` |
+| **改进版扫描器** 🆕 | 增强数据持久化版本 | `python app/api_key_scanner_improved.py` |
+| **诊断工具** 🆕 | 系统配置诊断 | `python diagnose_issues.py` |
 | **Token健康监控** | Token健康检查和监控 | `python token_health_monitor.py` |
+| **统一启动器** 🆕 | 交互式启动菜单 | `./unified_launcher.sh` 或 `unified_launcher.bat` |
 | **快速部署脚本** | Docker一键部署 | `./quick_start.sh` |
 | **环境搭建脚本** | Python环境快速搭建 | `./setup_python_env.sh` |
 
@@ -337,6 +390,7 @@ ghp_ghi...    ✗ Invalid   0%      0          0.0%
 ## 🔗 相关链接
 
 ### 核心文档
+- [改进版扫描器指南](IMPROVED_SCANNER_GUIDE.md) 🆕
 - [Token管理指南](docs/TOKEN_MANAGEMENT_GUIDE.md)
 - [Token健康监控指南](TOKEN_HEALTH_MONITOR_GUIDE.md)
 - [详细部署文档](DOCKER_DEPLOY_GUIDE.md)

@@ -291,12 +291,16 @@ class FileManager:
             for key in valid_keys:
                 f.write(f"KEY: {key}\n")
             f.write("-" * 80 + "\n")
+            f.flush()  # 立即刷新缓冲区
+            os.fsync(f.fileno())  # 强制写入磁盘
 
         # 保存到keys_valid文件
         if self._keys_valid_filename:
             with open(self._keys_valid_filename, "a", encoding="utf-8") as f:
                 for key in valid_keys:
                     f.write(f"{key}\n")
+                f.flush()  # 立即刷新缓冲区
+                os.fsync(f.fileno())  # 强制写入磁盘
 
     def save_rate_limited_keys(self, repo_name: str, file_path: str, file_url: str, rate_limited_keys: List[str]) -> None:
         """保存被限流的API密钥"""
@@ -311,12 +315,16 @@ class FileManager:
                 for key in rate_limited_keys:
                     f.write(f"{key}\n")
                 f.write("-" * 80 + "\n")
+                f.flush()  # 立即刷新缓冲区
+                os.fsync(f.fileno())  # 强制写入磁盘
 
         # 保存纯密钥到原有文件（只保存key）
         if self._rate_limited_filename:
             with open(self._rate_limited_filename, "a", encoding="utf-8") as f:
                 for key in rate_limited_keys:
                     f.write(f"{key}\n")
+                f.flush()  # 立即刷新缓冲区
+                os.fsync(f.fileno())  # 强制写入磁盘
 
     def save_keys_send_result(self, keys: List[str], send_result: dict) -> None:
         """
@@ -492,6 +500,27 @@ class FileManager:
         except (IndexError, ValueError):
             pass
         return True
+    
+    def flush_all_files(self) -> None:
+        """刷新所有打开文件的缓冲区到磁盘"""
+        files_to_flush = [
+            self._keys_valid_filename,
+            self._detail_log_filename,
+            self._rate_limited_filename,
+            self._rate_limited_detail_filename,
+            self._keys_send_filename,
+            self._keys_send_detail_filename
+        ]
+        
+        for filename in files_to_flush:
+            if filename and os.path.exists(filename):
+                try:
+                    # 打开文件并立即关闭，强制刷新
+                    with open(filename, 'a') as f:
+                        f.flush()
+                        os.fsync(f.fileno())
+                except Exception as e:
+                    logger.error(f"Error flushing file {filename}: {e}")
 
 file_manager = FileManager(Config.DATA_PATH)
 checkpoint = file_manager.load_checkpoint()
