@@ -1,546 +1,345 @@
-# 🎪 Hajimi King - Automated API Key Discovery System
+# 🔍 API密钥扫描器 - 高效的GitHub密钥发现工具
 
-<div align="center">
+[![Docker](https://img.shields.io/badge/Docker-Ready-blue)](https://www.docker.com/)
+[![Python](https://img.shields.io/badge/Python-3.11+-green)](https://www.python.org/)
+[![License](https://img.shields.io/badge/License-MIT-yellow)](LICENSE)
 
-[![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
-[![Python](https://img.shields.io/badge/python-3.11+-blue.svg)](https://www.python.org/downloads/)
-[![Docker](https://img.shields.io/badge/docker-%230db7ed.svg?logo=docker&logoColor=white)](https://www.docker.com/)
-[![Status](https://img.shields.io/badge/status-beta-yellow.svg)](https://github.com/yourusername/hajimi-king)
+[English](README_EN.md) | 简体中文
 
-**人人都是哈基米大王** 👑
+## 📖 项目简介
 
-[English](#) | [简体中文](docs/README_CN.md) | [Quick Reference](docs/guides/QUICK_REFERENCE.md) | [Documentation](docs/) | [API Reference](docs/api/)
+API密钥扫描器是一个专门用于在GitHub上发现和验证Google API密钥（特别是Gemini API密钥）的自动化工具。通过智能搜索和并行验证机制，能够高效地发现有效的API密钥。
 
-</div>
+### ✨ 核心特性
 
----
+- 🚀 **并行验证** - 多线程并发验证，大幅提升效率
+- 🌐 **代理支持** - 集成WARP代理，避免IP限制
+- 🐳 **Docker部署** - 一键部署，开箱即用
+- ⚡ **UV加速** - 使用UV包管理器，依赖安装速度提升10倍
+- 📊 **智能过滤** - 自动过滤文档、示例等无效文件
+- 💾 **断点续传** - 支持增量扫描，避免重复工作
+- 🔄 **外部同步** - 支持与外部服务同步发现的密钥
+- 🔑 **智能Token管理** - 双模式配置，自动生命周期管理
 
-## 📚 Documentation
+## 🚀 快速开始
 
-All project documentation has been organized in the `docs/` directory for better maintainability:
+### 方式一：Docker部署（推荐）
 
-- **[Documentation Center](docs/)** - Complete documentation index
-- **[Quick Reference](docs/guides/QUICK_REFERENCE.md)** - Common commands and operations
-- **[Deployment Guides](docs/deployment/)** - Docker, GitHub Container Registry, and more
-- **[Technical Guides](docs/guides/)** - Project structure, optimization strategies
-- **[中文文档](docs/README_CN.md)** - Chinese documentation
-
----
-
-## 📋 Table of Contents
-
-- [Overview](#-overview)
-- [Features](#-features)
-- [Quick Start](#-quick-start)
-- [Installation](#-installation)
-- [Usage](#-usage)
-- [Configuration](#-configuration)
-- [API Documentation](#-api-documentation)
-- [Docker Deployment](#-docker-deployment)
-- [Troubleshooting](#-troubleshooting)
-- [Contributing](#-contributing)
-- [Changelog](#-changelog)
-- [License](#-license)
-
----
-
-## 🌟 Overview
-
-Hajimi King is an automated system designed to discover and validate API keys from public code repositories. It leverages GitHub's search API to find potentially exposed credentials and validates them efficiently using parallel processing.
-
-> ⚠️ **DISCLAIMER**: This tool is for educational and security research purposes only. Always respect API terms of service and handle discovered keys responsibly.
-
-### Key Benefits
-
-- 🔍 **Intelligent Search**: Advanced query strategies for efficient discovery
-- ⚡ **Parallel Validation**: Multi-threaded validation for high performance
-- 🔄 **Incremental Scanning**: Resume from where you left off
-- 🐳 **Docker Ready**: Easy deployment with Docker support
-- 📊 **External Sync**: Integration with load balancers and key management systems
-
----
-
-## ✨ Features
-
-### Core Features
-
-1. **GitHub Code Search** - Search for API keys using customizable queries
-2. **Parallel Validation** - Validate multiple keys simultaneously
-3. **Smart Filtering** - Automatically filter out documentation and test files
-4. **Proxy Support** - Rotate through multiple proxies for stability
-5. **External Synchronization** - Sync to [Gemini-Balancer](https://github.com/snailyp/gemini-balance) and [GPT-Load](https://github.com/tbphp/gpt-load)
-
-### Advanced Features
-
-- 📈 Incremental scanning with checkpoint support
-- 🔐 Secure credential management
-- 📝 Detailed logging and reporting
-- 🚀 Zero-downtime deployment
-- 📊 Performance monitoring
-
----
-
-## 🚀 Quick Start
-
-> 📖 **Need a quick command reference?** Check out our [Quick Reference Guide](docs/guides/QUICK_REFERENCE.md) for all common commands and operations.
-
-### Prerequisites
-
-- Python 3.11 or higher
-- Docker (optional, for containerized deployment)
-- GitHub Personal Access Token
-
-### One-Line Installation
+最简单的部署方式，集成WARP代理，无需担心网络限制：
 
 ```bash
-# Clone and setup
-git clone https://github.com/james-6-23/key_scanner.git && cd key_scanner && make setup
+# 1. 克隆项目
+git clone https://github.com/james-6-23/key_scanner.git
+cd key_scanner
+
+# 2. 准备配置文件
+cp .env.docker .env
+cp queries.example queries.txt
+
+# 3. 编辑配置（添加GitHub Token）
+# 编辑 .env 文件，设置 GITHUB_TOKENS=你的token
+
+# 4. 启动服务
+docker-compose up -d
+
+# 5. 查看日志
+docker-compose logs -f
 ```
 
-### Basic Usage
+### 方式二：本地部署
+
+如果您已经有可用的代理服务，可以选择本地部署：
 
 ```bash
-# Configure environment
+# 1. 克隆项目
+git clone https://github.com/james-6-23/key_scanner.git
+cd key_scanner
+
+# 2. 安装UV（可选，但推荐）
+curl -LsSf https://astral.sh/uv/install.sh | sh
+
+# 3. 创建虚拟环境并安装依赖
+uv venv
+source .venv/bin/activate  # Windows: .venv\Scripts\activate
+uv pip install -r requirements.txt
+
+# 或使用传统pip
+python -m venv venv
+source venv/bin/activate
+pip install -r requirements.txt
+
+# 4. 配置环境变量
 cp env.example .env
-# Edit .env with your GitHub token
+# 编辑 .env 文件：
+# - 设置 GITHUB_TOKENS=你的token
+# - 设置 PROXY=http://127.0.0.1:1080 (如果有外部代理)
 
-# Run the scanner
+# 5. 准备查询文件
+cp queries.example queries.txt
+
+# 6. 运行程序
 python app/api_key_scanner.py
 ```
 
----
+### 方式三：使用外部WARP代理
 
-## 📦 Installation
-
-### Method 1: Using UV (Recommended) 🚀
-
-UV is a fast Python package manager written in Rust. [Learn more about UV](docs/guides/uv_setup_guide.md)
-
-1. **Install UV**
-   ```bash
-   # macOS/Linux
-   curl -LsSf https://astral.sh/uv/install.sh | sh
-   
-   # Windows
-   irm https://astral.sh/uv/install.ps1 | iex
-   ```
-
-2. **Clone and setup project**
-   ```bash
-   git clone https://github.com/james-6-23/key_scanner.git
-   cd key_scanner
-   
-   # Set Python version
-   uv python install 3.11
-   uv python pin 3.11
-   
-   # Create virtual environment
-   uv venv
-   
-   # Activate environment
-   source .venv/bin/activate  # macOS/Linux
-   .venv\Scripts\activate     # Windows
-   
-   # Install dependencies
-   uv pip install -r pyproject.toml
-   ```
-
-### Method 2: Traditional pip/venv
-
-1. **Clone the repository**
-   ```bash
-   git clone https://github.com/james-6-23/key_scanner.git
-   cd key_scanner
-   ```
-
-2. **Set up Python environment**
-   ```bash
-   # Using venv
-   python -m venv .venv
-   source .venv/bin/activate  # On Windows: .venv\Scripts\activate
-   
-   # Install dependencies
-   pip install -r requirements.txt
-   ```
-
-3. **Configure environment**
-   ```bash
-   cp env.example .env
-   # Edit .env with your configuration
-   ```
-
-4. **Configure search queries**
-   ```bash
-   # Copy the example queries file
-   cp queries.example data/queries.txt
-   # Edit data/queries.txt to customize your search patterns
-   ```
-
-### Method 3: Docker Installation
+如果需要单独部署WARP代理供本地程序使用：
 
 ```bash
-# Using docker-compose
-docker-compose up -d
-
-# Or build manually
-docker build -t hajimi-king:latest .
-docker run -d --name hajimi-king -v ./data:/app/data hajimi-king:latest
-```
-
-### Method 4: Using Makefile
-
-```bash
-# View available commands
-make help
-
-# Quick setup and run
-make build
-make run
-```
-
----
-
-## 💻 Usage
-
-### Command Line Interface
-
-```bash
-# Basic usage
-python app/api_key_scanner.py
-
-# With custom configuration
-python app/api_key_scanner.py --config custom.env
-
-# Run specific queries
-python app/api_key_scanner.py --queries custom_queries.txt
-```
-
-### Python API
-
-```python
-from utils.github_client import GitHubClient
-from utils.parallel_validator import ParallelKeyValidator
-
-# Initialize clients
-github = GitHubClient(tokens=['your_token'])
-validator = ParallelKeyValidator(max_workers=10)
-
-# Search for keys
-results = github.search_for_keys("AIzaSy in:file")
-
-# Validate keys
-valid_keys = validator.validate_batch(potential_keys)
-```
-
-### Docker Commands
-
-```bash
-# Start service
-docker-compose up -d
-
-# View logs
-docker-compose logs -f hajimi-king
-
-# Stop service
-docker-compose down
-
-# Run with custom config
-docker run -v $(pwd)/custom.env:/app/.env hajimi-king:latest
-```
-
----
-
-## ⚙️ Configuration
-
-### Environment Variables
-
-Create a `.env` file based on `env.example`:
-
-```bash
-# Required Configuration
-GITHUB_TOKENS=ghp_token1,ghp_token2,ghp_token3  # GitHub API tokens (comma-separated)
-
-# Search Configuration
-QUERIES_FILE=queries.txt                        # Search queries file
-DATE_RANGE_DAYS=730                            # Repository age filter (days)
-FILE_PATH_BLACKLIST=readme,docs,test,example   # Paths to skip
-
-# Performance Configuration
-HAJIMI_MAX_WORKERS=10                          # Parallel validation threads
-HAJIMI_BATCH_SIZE=10                           # Batch processing size
-HAJIMI_BATCH_INTERVAL=60                       # Batch interval (seconds)
-
-# Proxy Configuration (Optional)
-PROXY=http://proxy1:8080,http://proxy2:8080    # Proxy list (comma-separated)
-
-# External Sync (Optional)
-GEMINI_BALANCER_SYNC_ENABLED=false             # Enable Gemini Balancer sync
-GEMINI_BALANCER_URL=http://balancer:8080       # Balancer URL
-GEMINI_BALANCER_AUTH=your_auth_token           # Balancer auth token
-
-# Data Storage
-DATA_PATH=./data                               # Data directory path
-```
-
-### Search Queries Configuration
-
-The project uses a two-file approach for search queries:
-- `queries.example` - Example queries file (committed to version control)
-- `data/queries.txt` - Your actual queries file (ignored by git)
-
-To set up your queries:
-```bash
-# First time setup
-cp queries.example data/queries.txt
-
-# Edit with your custom queries
-nano data/queries.txt  # or use your preferred editor
-```
-
-Example query patterns in `data/queries.txt`:
-
-```bash
-# Basic search
-AIzaSy in:file
-
-# Environment files
-AIzaSy in:file filename:.env
-AIzaSy in:file filename:.env.example
-
-# Language-specific
-AIzaSy in:file extension:py "GEMINI_API_KEY"
-AIzaSy in:file language:javascript filename:config.js
-
-# Advanced patterns
-"AIzaSy" "gemini" in:file
-AIzaSy in:file size:<10000
-```
-
-See [Query Optimization Guide](docs/guides/queries_optimization_guide.md) for advanced strategies.
-
----
-
-## 📚 API Documentation
-
-### Core Modules
-
-#### GitHubClient
-
-Handles GitHub API interactions:
-
-```python
-class GitHubClient:
-    def __init__(self, tokens: List[str])
-    def search_for_keys(self, query: str) -> Dict[str, Any]
-    def get_file_content(self, item: Dict[str, Any]) -> Optional[str]
-```
-
-#### ParallelKeyValidator
-
-Validates API keys in parallel:
-
-```python
-class ParallelKeyValidator:
-    def __init__(self, max_workers: int = 10)
-    def validate_batch(self, keys: List[str]) -> Dict[str, ValidationResult]
-    def get_stats(self) -> ValidationStats
-```
-
-#### FileManager
-
-Manages data persistence:
-
-```python
-class FileManager:
-    def __init__(self, data_dir: str)
-    def save_valid_keys(self, repo: str, path: str, url: str, keys: List[str])
-    def load_checkpoint(self) -> Checkpoint
-    def save_checkpoint(self, checkpoint: Checkpoint)
-```
-
-For complete API reference, see [API Documentation](docs/api/).
-
----
-
-## 🐳 Docker Deployment
-
-### Development Environment
-
-```yaml
-# docker-compose.yml
-version: '3.8'
-services:
-  hajimi-king:
-    build: .
-    volumes:
-      - ./data:/app/data
-    env_file:
-      - .env
-```
-
-### Production Deployment
-
-```bash
-# Zero-downtime deployment
-./deploy.sh --version v1.0.0
-
-# Manual blue-green deployment
-docker-compose -f docker-compose.prod.yml up -d
-```
-
-### Docker Hub
-
-```bash
-# Pull from Docker Hub
-docker pull yourusername/hajimi-king:latest
-
-# Run with custom config
+# 1. 部署WARP代理
 docker run -d \
-  --name hajimi-king \
-  -v $(pwd)/data:/app/data \
-  -v $(pwd)/.env:/app/.env \
-  yourusername/hajimi-king:latest
+  --name warp \
+  --restart always \
+  -p 127.0.0.1:1080:1080 \
+  -e WARP_SLEEP=2 \
+  --cap-add NET_ADMIN \
+  --sysctl net.ipv6.conf.all.disable_ipv6=0 \
+  --sysctl net.ipv4.conf.all.src_valid_mark=1 \
+  -v ./warp-data:/var/lib/cloudflare-warp \
+  caomingjun/warp
+
+# 2. 在.env中配置代理
+PROXY=http://127.0.0.1:1080
+
+# 3. 运行本地程序
+python app/api_key_scanner.py
 ```
 
-See [Docker Deployment Guide](docs/deployment/docker_deployment_guide.md) for detailed instructions, or check the [Quick Reference](docs/guides/QUICK_REFERENCE.md#-docker-镜像管理) for common Docker commands.
+## 📋 配置说明
+
+### 必需配置
+
+| 配置项 | 说明 | 示例 |
+|--------|------|------|
+| `GITHUB_TOKENS` | GitHub API令牌，支持多个 | `ghp_token1,ghp_token2` |
+
+### Token配置模式
+
+系统支持两种Token配置模式：
+
+#### 模式1：小规模部署（默认）
+```env
+# 在.env中配置逗号分隔的tokens
+GITHUB_TOKENS=ghp_token1,ghp_token2,ghp_token3
+USE_EXTERNAL_TOKEN_FILE=false
+```
+
+#### 模式2：大规模部署
+```env
+# 使用外部文件管理大量tokens
+USE_EXTERNAL_TOKEN_FILE=true
+GITHUB_TOKENS_FILE=github_tokens.txt
+```
+
+创建`github_tokens.txt`：
+```
+ghp_production_token_1
+ghp_production_token_2
+ghp_production_token_3
+# 支持注释
+```
+
+### 可选配置
+
+| 配置项 | 说明 | 默认值 |
+|--------|------|--------|
+| `PROXY` | 代理服务器地址 | 无 |
+| `DATE_RANGE_DAYS` | 仓库更新时间过滤（天） | 730 |
+| `HAJIMI_MAX_WORKERS` | 并行验证线程数 | 10 |
+| `HAJIMI_BATCH_SIZE` | 批处理大小 | 10 |
+| `FILE_PATH_BLACKLIST` | 文件路径黑名单 | readme,docs,test等 |
+| `TOKEN_AUTO_REMOVE_EXHAUSTED` | 自动移除耗尽的tokens | true |
+| `TOKEN_MIN_REMAINING_CALLS` | 最小剩余调用次数 | 10 |
+
+### 查询配置
+
+编辑 `queries.txt` 文件来自定义搜索查询。每行一个GitHub搜索语句：
+
+```
+AIzaSy in:file
+AIzaSy in:file filename:.env
+AIzaSy in:file extension:json
+```
+
+## 🏗️ 项目结构
+
+```
+key_scanner/
+├── app/                    # 应用主程序
+│   └── api_key_scanner.py  # 主扫描器
+├── utils/                  # 工具模块
+│   ├── file_manager.py     # 文件管理
+│   ├── github_client.py    # GitHub API客户端
+│   └── parallel_validator.py # 并行验证器
+├── common/                 # 公共模块
+│   ├── config.py          # 配置管理
+│   └── Logger.py          # 日志系统
+├── docker-compose.yml      # Docker编排文件
+├── Dockerfile             # Docker镜像定义
+├── queries.txt            # 搜索查询配置
+├── .env                   # 环境变量配置
+└── data/                  # 数据存储目录
+    ├── keys/              # 发现的密钥
+    └── logs/              # 运行日志
+```
+
+## 🔧 高级功能
+
+### Token健康监控工具
+
+系统包含独立的Token健康监控工具，提供全面的健康检查：
+
+```bash
+# 单次健康检查
+python token_health_monitor.py github_tokens.txt
+
+# 持续监控模式
+python token_health_monitor.py github_tokens.txt --continuous
+```
+
+监控指标：
+- 🏥 健康评分（0-100分）
+- 📊 实时性能指标
+- 🚨 智能告警系统
+- 📈 历史趋势分析
+
+详细使用请参考 [Token健康监控指南](TOKEN_HEALTH_MONITOR_GUIDE.md)
+
+### 并行验证机制
+
+系统采用多线程并行验证，显著提升验证效率：
+
+- 自动分配验证任务到多个工作线程
+- 智能代理轮换，避免单点限流
+- 批量验证支持，减少网络开销
+
+### Token生命周期管理
+
+系统自动管理GitHub tokens的完整生命周期：
+
+- **自动监控**：实时监控每个token的API速率限制
+- **智能轮换**：自动轮换使用可用的tokens
+- **自动归档**：耗尽或无效的tokens自动归档到备份文件
+- **自动恢复**：限流时间过后自动恢复token使用
+- **状态持久化**：token状态信息持久化保存
+
+详细配置请参考 [Token管理指南](docs/TOKEN_MANAGEMENT_GUIDE.md)
+
+### 增量扫描
+
+支持断点续传和增量扫描：
+
+- 自动记录已扫描的文件SHA
+- 跳过已处理的查询
+- 基于时间戳的增量更新
+
+### 代理管理
+
+灵活的代理配置：
+
+- 支持HTTP/HTTPS/SOCKS5代理
+- 多代理轮换
+- 自动重试机制
+
+## 📊 运行效果
+
+```
+🚀 HAJIMI KING STARTING (Parallel Validation Edition)
+⏰ Started at: 2024-12-07 10:00:00
+⚡ Parallel validation enabled with 10 workers
+✅ System ready - Starting scan
+
+🔍 Processing query: AIzaSy in:file
+🔑 Found 5 suspected key(s), starting parallel validation...
+✅ VALID: AIzaSyXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+⚡ Parallel validation completed: 5 keys in 2.3s (2.2 keys/s)
+💾 Saved 1 valid key(s)
+
+📊 Token Status - Active: 8/10, Remaining calls: 35,420
+```
+
+### Token健康仪表板
+
+```
+🔑 TOKEN HEALTH MONITOR DASHBOARD 🔑
+=====================================
+Token         Status      Health  Remaining  Success%
+ghp_abc...    ✓ Active    95%     4523       98.5%
+ghp_def...    ⚠ Limited   45%     0          95.0%
+ghp_ghi...    ✗ Invalid   0%      0          0.0%
+```
+
+## 🐛 故障排查
+
+### 常见问题
+
+1. **GitHub API限流**
+   - 解决方案：添加更多GitHub Token到配置中
+
+2. **代理连接失败**
+   - 检查代理服务状态：`docker ps`
+   - 重启代理：`docker restart warp`
+
+3. **找不到queries.txt**
+   - 确认文件存在：`ls -la queries.txt`
+   - 从示例创建：`cp queries.example queries.txt`
+
+## 📝 更新日志
+
+- **v1.0.0** (2024-12)
+  - 初始版本发布
+  - 支持Docker一键部署
+  - 集成WARP代理
+  - 并行验证机制
+
+## 🤝 贡献指南
+
+欢迎提交Issue和Pull Request！
+
+1. Fork本项目
+2. 创建特性分支 (`git checkout -b feature/AmazingFeature`)
+3. 提交更改 (`git commit -m 'Add some AmazingFeature'`)
+4. 推送到分支 (`git push origin feature/AmazingFeature`)
+5. 开启Pull Request
+
+## 🛠️ 工具集
+
+本项目包含以下工具：
+
+| 工具 | 功能 | 使用方法 |
+|------|------|----------|
+| **主扫描器** | API密钥扫描和验证 | `python app/api_key_scanner.py` |
+| **Token健康监控** | Token健康检查和监控 | `python token_health_monitor.py` |
+| **快速部署脚本** | Docker一键部署 | `./quick_start.sh` |
+
+##  许可证
+
+本项目采用 MIT 许可证 - 查看 [LICENSE](LICENSE) 文件了解详情
+
+## ⚠️ 免责声明
+
+本工具仅供安全研究和教育目的使用。使用者应遵守相关法律法规，不得用于非法用途。作者不对使用本工具造成的任何后果负责。
+
+## 🔗 相关链接
+
+### 核心文档
+- [Token管理指南](docs/TOKEN_MANAGEMENT_GUIDE.md)
+- [Token健康监控指南](TOKEN_HEALTH_MONITOR_GUIDE.md)
+- [详细部署文档](DOCKER_DEPLOY_GUIDE.md)
+- [综合部署方案](DEPLOYMENT_GUIDE.md)
+
+### 配置示例
+- [环境变量说明](env.example)
+- [Docker环境配置](.env.docker)
+- [查询语法示例](queries.example)
+- [Token文件示例](github_tokens.example)
+
+### 快速参考
+- [Docker快速参考](README_DOCKER.md)
+- [英文文档](README_EN.md)
 
 ---
 
-## 🔧 Troubleshooting
-
-### Common Issues
-
-#### 1. Module Import Errors
-
-```bash
-ModuleNotFoundError: No module named 'common'
-```
-
-**Solution**: Ensure you're running from the project root:
-```bash
-cd /path/to/hajimi-king
-python app/api_key_scanner.py  # Use the new filename
-```
-
-#### 2. GitHub API Rate Limiting
-
-```
-Error: API rate limit exceeded
-```
-
-**Solution**: 
-- Add more GitHub tokens to `.env`
-- Implement proxy rotation
-- Reduce request frequency
-
-#### 3. Permission Denied
-
-```
-PermissionError: [Errno 13] Permission denied: './data'
-```
-
-**Solution**:
-```bash
-# Fix permissions
-chmod -R 755 data/
-# Or for Docker
-docker exec hajimi-king chown -R appuser:appuser /app/data
-```
-
-#### 4. Memory Issues
-
-**Solution**: Adjust worker count and batch size:
-```bash
-HAJIMI_MAX_WORKERS=5
-HAJIMI_BATCH_SIZE=5
-```
-
-### Debug Mode
-
-Enable debug logging:
-```bash
-# In .env
-LOG_LEVEL=DEBUG
-
-# Or via command line
-LOG_LEVEL=DEBUG python app/api_key_scanner.py
-```
-
-### Getting Help
-
-1. Check [FAQ](docs/FAQ.md)
-2. Search [Issues](https://github.com/yourusername/hajimi-king/issues)
-3. Join our [Discord](https://discord.gg/hajimi-king)
-
----
-
-## 🤝 Contributing
-
-We welcome contributions! Please see our [Contributing Guide](docs/CONTRIBUTING.md) for details.
-
-### Development Setup
-
-```bash
-# Fork and clone
-git clone https://github.com/yourusername/hajimi-king.git
-cd hajimi-king
-
-# Create branch
-git checkout -b feature/amazing-feature
-
-# Install dev dependencies
-pip install -r requirements-dev.txt
-
-# Run tests
-pytest tests/
-
-# Submit PR
-```
-
-### Code Style
-
-- Follow PEP 8
-- Use Black for formatting
-- Run Ruff for linting
-- Write tests for new features
-
----
-
-## 📝 Changelog
-
-### [Unreleased]
-- Database support for key storage
-- Web UI for key management
-- Advanced analytics dashboard
-
-### [v0.0.1-beta] - 2024-01-07
-- Initial beta release
-- Parallel validation support
-- Docker deployment
-- External sync integration
-
-See [CHANGELOG.md](docs/CHANGELOG.md) for full history.
-
----
-
-## 📄 License
-
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-
----
-
-## 🙏 Acknowledgments
-
-- Thanks to all contributors
-- Inspired by security research community
-- Built with ❤️ using Python and Docker
-
----
-
-<div align="center">
-
-**⭐ Star us on GitHub if this project helped you!**
-
-[Report Bug](https://github.com/yourusername/hajimi-king/issues) · [Request Feature](https://github.com/yourusername/hajimi-king/issues) · [Documentation](docs/)
-
-</div>
+**作者**: Key Scanner Team  
+**版本**: 1.0.0  
+**更新**: 2024-12
