@@ -1,0 +1,23 @@
+# GitHub Token配置文件示例
+# 每行一个token，支持注释（以#开头）
+# 用于大规模部署场景，支持管理大量tokens
+
+# 生产环境tokens
+ghp_your_production_token_1_here_xxxxxxxxxxxxx
+ghp_your_production_token_2_here_xxxxxxxxxxxxx
+ghp_your_production_token_3_here_xxxxxxxxxxxxx
+
+# 备用tokens
+ghp_your_backup_token_1_here_xxxxxxxxxxxxxxxxx
+ghp_your_backup_token_2_here_xxxxxxxxxxxxxxxxx
+
+# 测试环境tokens（可以注释掉不使用）
+# ghp_your_test_token_1_here_xxxxxxxxxxxxxxxxxxx
+# ghp_your_test_token_2_here_xxxxxxxxxxxxxxxxxxx
+
+# 注意事项：
+# 1. 每个token需要有 'public_repo' 权限
+# 2. 建议准备至少5-10个tokens以避免速率限制
+# 3. Token会自动轮换使用
+# 4. 耗尽的token会自动归档到 data/archived_tokens/ 目录
+# 5. 系统会自动监控每个token的剩余调用次数
