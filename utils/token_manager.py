@@ -197,7 +197,8 @@ class TokenManager:
                 # 检查剩余调用次数
                 if status.remaining_calls < self.min_remaining_calls:
                     logger.warning(f"⚠️ Token {status.masked_token} has low remaining calls: {status.remaining_calls}")
-                    if self.auto_remove_exhausted:
+                    # 只有当剩余调用次数真正为0时才归档，而不是低于阈值就归档
+                    if self.auto_remove_exhausted and status.remaining_calls <= 0:
                         self._archive_token(token, "exhausted")
                         attempts += 1
                         continue
