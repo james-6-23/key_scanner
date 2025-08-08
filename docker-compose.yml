@@ -76,11 +76,16 @@ services:
       # 指定queries文件路径
       - QUERIES_FILE=/app/queries.txt
       - DATA_PATH=/app/data
+      # Token文件配置
+      - USE_EXTERNAL_TOKEN_FILE=true
+      - GITHUB_TOKENS_FILE=/app/github_tokens.txt
     
     # 数据卷挂载
     volumes:
       # 挂载本地queries.txt到容器根目录
       - ./queries.txt:/app/queries.txt:ro
+      # 挂载GitHub tokens文件
+      - ./github_tokens.txt:/app/github_tokens.txt:ro
       # 挂载环境变量文件
       - ./.env:/app/.env:ro
       # 数据持久化
