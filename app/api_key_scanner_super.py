@@ -49,7 +49,28 @@ from utils.github_client_enhanced import EnhancedGitHubClient
 from app.api_scanner_universal import UniversalAPIScanner
 
 # 配置日志
-# logger = Logger.get_logger("api_key_scanner_super")
+logger = Logger("api_key_scanner_super")
+
+
+class HajimiKingSuper:
+    """Hajimi King Super类 - 用于兼容性"""
+    pass
+
+
+def validate_api_key(api_key: str, api_type: str = "gemini") -> bool:
+    """
+    验证API密钥
+    
+    Args:
+        api_key: API密钥
+        api_type: API类型
+        
+    Returns:
+        是否有效
+    """
+    # 使用通用扫描器验证
+    scanner = UniversalAPIScanner([api_type])
+    return scanner.validate_key(api_key, api_type)
 
 
 class SuperAPIKeyScanner:
