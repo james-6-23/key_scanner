@@ -19,7 +19,7 @@ from typing import List, Dict, Any
 # 添加项目根目录到路径
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
-from utils.async_scanner import (
+from utils.async_scanner_optimized import (
     AsyncScanner, 
     ConcurrencyConfig, 
     ConcurrencyMode,
@@ -45,7 +45,7 @@ def print_header(title):
     print(f"{Colors.CYAN}{'='*60}{Colors.RESET}\n")
 
 class OptimizedPerformanceBenchmark:
-    """优化的性能基准测试类"""
+    """优化的性能基准测试�?""
     
     def __init__(self):
         self.results = {}
@@ -58,14 +58,14 @@ class OptimizedPerformanceBenchmark:
         return self.process.memory_info().rss / 1024 / 1024  # MB
     
     def measure_cpu(self):
-        """测量CPU使用率"""
+        """测量CPU使用�?""
         return self.process.cpu_percent(interval=0.1)
     
     async def async_github_search(self, query: str, count: int = 100) -> Dict:
         """异步GitHub搜索模拟"""
         print(f"异步搜索: {query}")
         
-        # 使用激进模式配置
+        # 使用激进模式配�?
         config = ConcurrencyConfig.from_mode(ConcurrencyMode.AGGRESSIVE)
         
         async with AsyncScanner(config) as scanner:
@@ -100,7 +100,7 @@ class OptimizedPerformanceBenchmark:
     
     async def async_key_validation(self, keys: List[str], max_workers: int = 100) -> Dict:
         """异步密钥验证"""
-        print(f"异步验证 {len(keys)} 个密钥 (并发: {max_workers})")
+        print(f"异步验证 {len(keys)} 个密�?(并发: {max_workers})")
         
         # 使用自适应配置
         config = self.adaptive_manager.get_optimal_config()
@@ -123,7 +123,7 @@ class OptimizedPerformanceBenchmark:
             elapsed = time.time() - start
             rate = len(keys) / elapsed
             
-            # 更新自适应管理器
+            # 更新自适应管理�?
             success_rate = len(valid_keys) / len(keys)
             avg_response_time = elapsed / len(keys)
             self.adaptive_manager.adjust_concurrency(success_rate, avg_response_time)
@@ -156,7 +156,7 @@ class OptimizedPerformanceBenchmark:
             total_time += result["time"]
             total_count += result["count"]
             
-            print(f"  [OK] {query[:30]}: {result['rate']:.1f} 文件/秒")
+            print(f"  [OK] {query[:30]}: {result['rate']:.1f} 文件/�?)
         
         avg_rate = total_count / total_time if total_time > 0 else 0
         
@@ -176,12 +176,12 @@ class OptimizedPerformanceBenchmark:
         # 生成测试密钥
         test_keys = [f"AIzaSy{i:07d}" for i in range(500)]
         
-        # 测试不同并发数
+        # 测试不同并发�?
         worker_counts = [50, 100, 200, 500]
         
         for workers in worker_counts:
             result = await self.async_key_validation(test_keys, max_workers=workers)
-            print(f"  并发 {workers:3d}: {result['rate']:.1f} 密钥/秒")
+            print(f"  并发 {workers:3d}: {result['rate']:.1f} 密钥/�?)
             
             self.results[f"async_validation_{workers}"] = result
         
@@ -190,7 +190,7 @@ class OptimizedPerformanceBenchmark:
                           key=lambda w: self.results[f"async_validation_{w}"]["rate"])
         best_rate = self.results[f"async_validation_{best_workers}"]["rate"]
         
-        print(f"\n{Colors.GREEN}最佳并发数: {best_workers} (速度: {best_rate:.1f} 密钥/秒){Colors.RESET}")
+        print(f"\n{Colors.GREEN}最佳并发数: {best_workers} (速度: {best_rate:.1f} 密钥/�?{Colors.RESET}")
     
     async def benchmark_batch_processing(self):
         """测试批处理性能"""
@@ -213,17 +213,17 @@ class OptimizedPerformanceBenchmark:
             # 启动处理任务
             process_task = asyncio.create_task(processor.start_processing(process_batch))
             
-            # 添加所有项目
+            # 添加所有项�?
             for item in items:
                 await processor.add_item(item)
             
-            # 等待一小段时间让处理完成
+            # 等待一小段时间让处理完�?
             await asyncio.sleep(0.5)
             
             # 停止处理
             processor.stop_processing()
             
-            # 等待任务完成（带超时）
+            # 等待任务完成（带超时�?
             try:
                 await asyncio.wait_for(process_task, timeout=2.0)
             except asyncio.TimeoutError:
@@ -242,11 +242,11 @@ class OptimizedPerformanceBenchmark:
             "rate": rate
         }
         
-        print(f"  批处理速度: {rate:.1f} 项目/秒")
+        print(f"  批处理速度: {rate:.1f} 项目/�?)
         print(f"{Colors.GREEN}[OK] 批处理测试完成{Colors.RESET}")
     
     async def benchmark_concurrent_operations(self):
-        """测试并发操作（异步版）"""
+        """测试并发操作（异步版�?""
         print_header("异步并发操作测试")
         
         async def concurrent_task(task_id):
@@ -267,7 +267,7 @@ class OptimizedPerformanceBenchmark:
             elapsed = time.time() - start
             throughput = level / elapsed
             
-            print(f"  并发 {level:4d}: {throughput:.1f} 任务/秒")
+            print(f"  并发 {level:4d}: {throughput:.1f} 任务/�?)
             
             self.results[f"async_concurrent_{level}"] = {
                 "tasks": level,
@@ -275,12 +275,12 @@ class OptimizedPerformanceBenchmark:
                 "throughput": throughput
             }
         
-        # 找出最佳并发级别
+        # 找出最佳并发级�?
         best_level = max(concurrency_levels,
                         key=lambda l: self.results[f"async_concurrent_{l}"]["throughput"])
         best_throughput = self.results[f"async_concurrent_{best_level}"]["throughput"]
         
-        print(f"\n{Colors.GREEN}最佳并发级别: {best_level} (吞吐量: {best_throughput:.1f} 任务/秒){Colors.RESET}")
+        print(f"\n{Colors.GREEN}最佳并发级�? {best_level} (吞吐�? {best_throughput:.1f} 任务/�?{Colors.RESET}")
     
     def benchmark_memory_usage(self):
         """测试内存使用"""
@@ -303,7 +303,7 @@ class OptimizedPerformanceBenchmark:
         loaded_memory = self.measure_memory()
         memory_growth = loaded_memory - initial_memory
         
-        print(f"加载后内存: {loaded_memory:.2f} MB")
+        print(f"加载后内�? {loaded_memory:.2f} MB")
         print(f"内存增长: {memory_growth:.2f} MB")
         
         self.results["memory"] = {
@@ -315,9 +315,9 @@ class OptimizedPerformanceBenchmark:
         # 清理
         del data
         
-        # 测量清理后内存
+        # 测量清理后内�?
         cleaned_memory = self.measure_memory()
-        print(f"清理后内存: {cleaned_memory:.2f} MB")
+        print(f"清理后内�? {cleaned_memory:.2f} MB")
         
         if memory_growth > 100:
             print(f"{Colors.YELLOW}[!] 内存使用较高{Colors.RESET}")
@@ -364,7 +364,7 @@ class OptimizedPerformanceBenchmark:
             grade = "良好"
             color = Colors.YELLOW
         else:
-            grade = "需要优化"
+            grade = "需要优�?
             color = Colors.RED
         
         print(f"{Colors.BOLD}性能等级: {color}{grade}{Colors.RESET}")
@@ -372,13 +372,13 @@ class OptimizedPerformanceBenchmark:
         # 性能对比
         print(f"\n{Colors.BOLD}性能提升对比:{Colors.RESET}")
         
-        # 假设原始并发能力为32.4分
+        # 假设原始并发能力�?2.4�?
         original_concurrency_score = 32.4
         current_concurrency_score = scores["并发能力"]
         improvement = (current_concurrency_score - original_concurrency_score) / original_concurrency_score * 100
         
         print(f"  原始并发能力: {original_concurrency_score:.1f}/100")
-        print(f"  优化后并发能力: {current_concurrency_score:.1f}/100")
+        print(f"  优化后并发能�? {current_concurrency_score:.1f}/100")
         print(f"  {Colors.GREEN}性能提升: {improvement:.1f}%{Colors.RESET}")
         
         # 保存详细报告
@@ -396,30 +396,30 @@ class OptimizedPerformanceBenchmark:
         print(f"\n{Colors.BLUE}详细报告已保存到: {report_path}{Colors.RESET}")
         
         # 优化建议
-        print(f"\n{Colors.BOLD}进一步优化建议:{Colors.RESET}")
+        print(f"\n{Colors.BOLD}进一步优化建�?{Colors.RESET}")
         
         if scores["异步搜索性能"] < 80:
-            print(f"  • 使用连接池复用HTTP连接")
-            print(f"  • 实现请求缓存机制")
+            print(f"  �?使用连接池复用HTTP连接")
+            print(f"  �?实现请求缓存机制")
         
         if scores["异步验证性能"] < 80:
-            print(f"  • 使用更高效的验证算法")
-            print(f"  • 实现验证结果缓存")
+            print(f"  �?使用更高效的验证算法")
+            print(f"  �?实现验证结果缓存")
         
         if scores["批处理性能"] < 80:
-            print(f"  • 调整批处理大小")
-            print(f"  • 使用流式处理")
+            print(f"  �?调整批处理大�?)
+            print(f"  �?使用流式处理")
         
         if scores["内存效率"] < 80:
-            print(f"  • 实现内存池")
-            print(f"  • 使用生成器减少内存占用")
+            print(f"  �?实现内存�?)
+            print(f"  �?使用生成器减少内存占�?)
         
         if scores["并发能力"] < 80:
-            print(f"  • 使用uvloop替代默认事件循环")
-            print(f"  • 优化协程调度策略")
+            print(f"  �?使用uvloop替代默认事件循环")
+            print(f"  �?优化协程调度策略")
 
 async def main():
-    """主函数"""
+    """主函�?""
     print_header("优化版扫描器性能基准测试")
     
     print(f"{Colors.YELLOW}开始优化性能测试，使用异步IO提升并发...{Colors.RESET}\n")
@@ -456,5 +456,5 @@ if __name__ == "__main__":
         print(f"{Colors.YELLOW}正在安装 aiohttp...{Colors.RESET}")
         os.system("pip install aiohttp")
     
-    # 运行异步主函数
+    # 运行异步主函�?
     sys.exit(asyncio.run(main()))
