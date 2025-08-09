@@ -56,7 +56,7 @@ class TokenManagerAdapter:
             Token字符串或None
         """
         credential = self.credential_manager.get_optimal_credential(
-            service_type=ServiceType.GITHUB
+            service=ServiceType.GITHUB
         )
         
         if credential:
@@ -117,7 +117,7 @@ class TokenManagerAdapter:
             Token列表
         """
         credentials = self.credential_manager.list_credentials(
-            service_type=ServiceType.GITHUB
+            service=ServiceType.GITHUB
         )
         return [cred.value for cred in credentials]
         
@@ -313,7 +313,7 @@ class CredentialBridge:
             service_type = ServiceType[service_type.upper()]
             
         credential = self.manager.get_optimal_credential(
-            service_type=service_type,
+            service=service_type,
             strategy=strategy
         )
         
@@ -514,7 +514,7 @@ class GitHubTokenBridge:
         """同步凭证到文件"""
         try:
             credentials = self.credential_manager.list_credentials(
-                service_type=ServiceType.GITHUB
+                service=ServiceType.GITHUB
             )
             
             # 只写入活跃的凭证
@@ -534,7 +534,7 @@ class GitHubTokenBridge:
     def get_next_token(self) -> Optional[str]:
         """获取下一个可用token"""
         credential = self.credential_manager.get_optimal_credential(
-            service_type=ServiceType.GITHUB
+            service=ServiceType.GITHUB
         )
         return credential.value if credential else None
         
@@ -542,7 +542,7 @@ class GitHubTokenBridge:
         """标记token已耗尽"""
         # 查找对应的凭证
         credentials = self.credential_manager.list_credentials(
-            service_type=ServiceType.GITHUB
+            service=ServiceType.GITHUB
         )
         
         for cred in credentials:
@@ -573,7 +573,7 @@ class GitHubTokenBridge:
     def remove_invalid_tokens(self):
         """移除无效tokens"""
         credentials = self.credential_manager.list_credentials(
-            service_type=ServiceType.GITHUB
+            service=ServiceType.GITHUB
         )
         
         removed_count = 0
