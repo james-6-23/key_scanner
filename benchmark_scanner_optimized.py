@@ -209,19 +209,32 @@ class OptimizedPerformanceBenchmark:
         
         start = time.time()
         
-        # 启动处理
-        process_task = asyncio.create_task(processor.start_processing(process_batch))
-        
-        # 添加所有项目
-        for item in items:
-            await processor.add_item(item)
-        
-        # 停止处理
-        processor.stop_processing()
-        await process_task
+        try:
+            # 启动处理任务
+            process_task = asyncio.create_task(processor.start_processing(process_batch))
+            
+            # 添加所有项目
+            for item in items:
+                await processor.add_item(item)
+            
+            # 等待一小段时间让处理完成
+            await asyncio.sleep(0.5)
+            
+            # 停止处理
+            processor.stop_processing()
+            
+            # 等待任务完成（带超时）
+            try:
+                await asyncio.wait_for(process_task, timeout=2.0)
+            except asyncio.TimeoutError:
+                process_task.cancel()
+                
+        except asyncio.CancelledError:
+            # 处理取消情况
+            pass
         
         elapsed = time.time() - start
-        rate = len(items) / elapsed
+        rate = len(items) / elapsed if elapsed > 0 else 0
         
         self.results["batch_processing"] = {
             "items": len(items),

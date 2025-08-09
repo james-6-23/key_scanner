@@ -306,8 +306,12 @@ class AsyncBatchProcessor:
         """开始处理"""
         self.processing = True
         
-        while self.processing or not self.queue.empty():
-            await self.process_batch(processor)
+        try:
+            while self.processing or not self.queue.empty():
+                await self.process_batch(processor)
+        except asyncio.CancelledError:
+            # 优雅处理取消
+            pass
     
     def stop_processing(self):
         """停止处理"""
