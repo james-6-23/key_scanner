@@ -233,13 +233,26 @@ class CredentialManager:
         with self.lock:
             try:
                 # 创建凭证对象
-                credential = Credential(
-                    service_type=service_type,
-                    value=value,
-                    status=CredentialStatus.PENDING,
-                    source="manual",
-                    metadata=metadata or {}
-                )
+                # 对于 GitHub tokens，直接设置为 ACTIVE 状态
+                if service_type == ServiceType.GITHUB:
+                    credential = Credential(
+                        service_type=service_type,
+                        value=value,
+                        status=CredentialStatus.ACTIVE,  # GitHub tokens 直接激活
+                        source=metadata.get('source', 'manual') if metadata else 'manual',
+                        metadata=metadata or {},
+                        health_score=100.0,
+                        remaining_quota=5000,
+                        total_quota=5000
+                    )
+                else:
+                    credential = Credential(
+                        service_type=service_type,
+                        value=value,
+                        status=CredentialStatus.PENDING,
+                        source="manual",
+                        metadata=metadata or {}
+                    )
                 
                 # 验证凭证
                 if not self._validate_credential(credential):
