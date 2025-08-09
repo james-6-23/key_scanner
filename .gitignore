@@ -212,7 +212,8 @@ todo.txt
 *token*
 !*example*
 !*template*
-!credential_manager/
+!credential_manager/**
+!credential_manager/**/token_harvester.py
 
 # User-specific settings
 user_config/
