@@ -142,28 +142,18 @@ class SuperAPIKeyScanner:
         """初始化凭证管理系统"""
         logger.info("🔧 初始化高级凭证管理系统...")
         
-        # 配置凭证管理器
-        credential_config = {
-            'encryption_enabled': os.getenv('CREDENTIAL_ENCRYPTION_ENABLED', 'true').lower() == 'true',
-            'balancing_strategy': os.getenv('CREDENTIAL_BALANCING_STRATEGY', 'quota_aware'),
-            'min_pool_size': int(os.getenv('CREDENTIAL_MIN_POOL_SIZE', '10')),
-            'max_pool_size': int(os.getenv('CREDENTIAL_MAX_POOL_SIZE', '100')),
-            'health_check_interval': int(os.getenv('CREDENTIAL_HEALTH_CHECK_INTERVAL', '60')),
-            'discovery_interval': int(os.getenv('CREDENTIAL_DISCOVERY_INTERVAL', '300')),
-            'harvesting_enabled': os.getenv('CREDENTIAL_AUTO_HARVEST', 'false').lower() == 'true'
-        }
-        
-        # 初始化管理器
-        self.credential_manager = get_credential_manager(credential_config)
-        
-        # 创建集成桥接器 - 传递配置路径而不是管理器实例
+        # 创建集成桥接器 - 它会创建自己的凭证管理器
         config_path = os.getenv('CREDENTIAL_CONFIG_PATH', 'config/credentials.json')
         self.credential_bridge = CredentialBridge(config_path)
+        
+        # 使用 bridge 内部的管理器
+        self.credential_manager = self.credential_bridge.manager
         
         # 导入现有tokens
         self._import_existing_tokens()
         
-        logger.info(f"✅ 凭证管理系统就绪 - 策略: {credential_config['balancing_strategy']}")
+        balancing_strategy = os.getenv('CREDENTIAL_BALANCING_STRATEGY', 'quota_aware')
+        logger.info(f"✅ 凭证管理系统就绪 - 策略: {balancing_strategy}")
     
     def _import_existing_tokens(self):
         """导入现有的GitHub tokens"""
