@@ -241,10 +241,11 @@ class CredentialManager:
                         status=CredentialStatus.ACTIVE,  # GitHub tokens 直接激活
                         source=metadata.get('source', 'manual') if metadata else 'manual',
                         metadata=metadata or {},
-                        health_score=100.0,
                         remaining_quota=5000,
                         total_quota=5000
                     )
+                    # 设置健康度（在创建后设置）
+                    credential.health_score = 100.0
                 else:
                     credential = Credential(
                         service_type=service_type,
