@@ -164,10 +164,19 @@ class CredentialBridge:
             db_path=self.config.get('vault_db_path', 'credentials.db')
         )
         
-        self.manager = CredentialManager(
-            vault=self.vault,
-            strategy=self.config.get('balancing_strategy', 'quota_aware')
-        )
+        # 创建配置字典传递给CredentialManager
+        manager_config = {
+            'encryption_enabled': self.config.get('encryption_enabled', True),
+            'balancing_strategy': self.config.get('balancing_strategy', 'quota_aware'),
+            'health_check_interval': self.config.get('health_check_interval', 60),
+            'min_pool_size': self.config.get('min_pool_size', 10),
+            'max_pool_size': self.config.get('max_pool_size', 100),
+            'discovery_enabled': self.config.get('discovery_enabled', True),
+            'discovery_interval': self.config.get('discovery_interval', 300),
+            'harvesting_enabled': self.config.get('harvesting_enabled', False)
+        }
+        
+        self.manager = CredentialManager(manager_config)
         
         self.health_checker = HealthChecker(
             check_interval=self.config.get('health_check_interval', 60)
@@ -473,8 +482,12 @@ class GitHubTokenBridge:
         
     def _create_default_manager(self) -> CredentialManager:
         """创建默认管理器"""
-        vault = CredentialVault(db_path='github_credentials.db')
-        return CredentialManager(vault=vault, strategy='quota_aware')
+        config = {
+            'encryption_enabled': True,
+            'balancing_strategy': 'quota_aware',
+            'vault_db_path': 'github_credentials.db'
+        }
+        return CredentialManager(config)
         
     def _load_tokens_from_file(self):
         """从文件加载tokens"""
