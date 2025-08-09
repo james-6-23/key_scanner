@@ -22,13 +22,13 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from common.config import Config
-from common.Logger import Logger
+from common.Logger import logger
 from utils.file_manager import FileManager
 from credential_manager.core.manager import get_credential_manager
 from credential_manager.core.models import ServiceType
 
 # 配置日志
-logger = Logger.get_logger("universal_api_scanner")
+# logger = Logger.get_logger("universal_api_scanner")
 
 
 class UniversalAPIScanner:

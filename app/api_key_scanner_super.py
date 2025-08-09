@@ -46,7 +46,7 @@ from credential_manager.monitoring.dashboard import start_monitoring_server
 from utils.github_client_enhanced import EnhancedGitHubClient
 
 # 导入通用API扫描器
-from api_scanner_universal import UniversalAPIScanner
+from app.api_scanner_universal import UniversalAPIScanner
 
 # 配置日志
 logger = Logger.get_logger("api_key_scanner_super")
