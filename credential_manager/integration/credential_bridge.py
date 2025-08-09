@@ -56,7 +56,7 @@ class TokenManagerAdapter:
             Token字符串或None
         """
         credential = self.credential_manager.get_optimal_credential(
-            service=ServiceType.GITHUB
+            service_type=ServiceType.GITHUB
         )
         
         if credential:
@@ -116,8 +116,8 @@ class TokenManagerAdapter:
         Returns:
             Token列表
         """
-        credentials = self.credential_manager.list_credentials(
-            service=ServiceType.GITHUB
+        credentials = self.credential_manager.get_all_credentials(
+            service_type=ServiceType.GITHUB
         )
         return [cred.value for cred in credentials]
         
@@ -280,7 +280,7 @@ class CredentialBridge:
         # 启动健康监控
         if self.healing_engine:
             self.health_checker.start_monitoring(
-                lambda: self.manager.list_credentials()
+                lambda: self.manager.get_all_credentials()
             )
             
         logger.info("Credential Bridge initialized")
@@ -292,7 +292,9 @@ class CredentialBridge:
             self.health_checker.stop_monitoring()
             
         # 保存状态
-        self.manager.save_state()
+        # 保存状态 - 注意：CredentialManager 可能没有 save_state 方法
+        # self.manager.save_state()
+        self.manager.shutdown()
         
         logger.info("Credential Bridge shutdown")
         
@@ -313,8 +315,7 @@ class CredentialBridge:
             service_type = ServiceType[service_type.upper()]
             
         credential = self.manager.get_optimal_credential(
-            service=service_type,
-            strategy=strategy
+            service_type=service_type
         )
         
         if credential:
@@ -368,7 +369,7 @@ class CredentialBridge:
             output_path: 输出路径
             include_values: 是否包含实际值（危险！）
         """
-        credentials = self.manager.list_credentials()
+        credentials = self.manager.get_all_credentials()
         
         export_data = {
             'export_time': datetime.now().isoformat(),
@@ -405,7 +406,7 @@ class CredentialBridge:
             'credentials': []
         }
         
-        for cred in self.manager.list_credentials():
+        for cred in self.manager.get_all_credentials():
             health_result = self.health_checker.check_credential(cred)
             
             report['credentials'].append({
@@ -438,7 +439,7 @@ class CredentialBridge:
             'actions': []
         }
         
-        for cred in self.manager.list_credentials():
+        for cred in self.manager.get_all_credentials():
             actions = await self.healing_engine.diagnose_and_heal(cred, self.manager)
             
             for action in actions:
@@ -513,8 +514,8 @@ class GitHubTokenBridge:
     def sync_to_file(self):
         """同步凭证到文件"""
         try:
-            credentials = self.credential_manager.list_credentials(
-                service=ServiceType.GITHUB
+            credentials = self.credential_manager.get_all_credentials(
+                service_type=ServiceType.GITHUB
             )
             
             # 只写入活跃的凭证
@@ -534,15 +535,15 @@ class GitHubTokenBridge:
     def get_next_token(self) -> Optional[str]:
         """获取下一个可用token"""
         credential = self.credential_manager.get_optimal_credential(
-            service=ServiceType.GITHUB
+            service_type=ServiceType.GITHUB
         )
         return credential.value if credential else None
         
     def mark_token_exhausted(self, token: str):
         """标记token已耗尽"""
         # 查找对应的凭证
-        credentials = self.credential_manager.list_credentials(
-            service=ServiceType.GITHUB
+        credentials = self.credential_manager.get_all_credentials(
+            service_type=ServiceType.GITHUB
         )
         
         for cred in credentials:
@@ -572,8 +573,8 @@ class GitHubTokenBridge:
             
     def remove_invalid_tokens(self):
         """移除无效tokens"""
-        credentials = self.credential_manager.list_credentials(
-            service=ServiceType.GITHUB
+        credentials = self.credential_manager.get_all_credentials(
+            service_type=ServiceType.GITHUB
         )
         
         removed_count = 0
