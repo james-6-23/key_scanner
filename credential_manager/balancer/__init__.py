@@ -2,9 +2,9 @@
 Load balancer module for credential management
 """
 
-from .strategies import LoadBalancerStrategy, get_load_balancer
+from .strategies import LoadBalancingStrategy, get_strategy
 
 __all__ = [
-    "LoadBalancerStrategy",
-    "get_load_balancer",
+    "LoadBalancingStrategy",
+    "get_strategy",
 ]
