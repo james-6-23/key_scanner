@@ -4,6 +4,8 @@
 cryptography>=41.0.0      # 加密存储
 pyyaml>=6.0              # YAML文件解析
 python-dotenv>=1.0.0     # 环境变量管理
+aiohttp>=3.9.0           # 异步HTTP客户端
+uvloop>=0.19.0          # 高性能事件循环
 
 # 可选依赖（用于高级功能）
 matplotlib>=3.7.0        # 监控图表（可选）
