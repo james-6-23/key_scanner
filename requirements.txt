@@ -1,19 +1,18 @@
-# Hajimi King Requirements
-# Generated from pyproject.toml
-# For UV users: use `uv pip install -r pyproject.toml` instead
+# 凭证管理系统依赖包
 
-# Core dependencies
-google-generativeai>=0.8.0
-requests>=2.31.0
-python-dotenv>=1.0.0
-tqdm>=4.65.0
+# 核心依赖
+cryptography>=41.0.0      # 加密存储
+pyyaml>=6.0              # YAML文件解析
+python-dotenv>=1.0.0     # 环境变量管理
 
-# Google API dependencies
-google-api-python-client>=2.100.0
-google-auth>=2.20.0
-google-auth-httplib2>=0.1.0
+# 可选依赖（用于高级功能）
+matplotlib>=3.7.0        # 监控图表（可选）
+aiofiles>=23.0.0        # 异步文件操作（可选）
+rich>=13.0.0            # 美化控制台输出（可选）
 
-# Optional: For development
-# pytest>=7.0.0
-# black>=23.0.0
-# ruff>=0.1.0
+# 开发依赖
+pytest>=7.4.0           # 测试框架
+pytest-asyncio>=0.21.0  # 异步测试支持
+black>=23.0.0           # 代码格式化
+flake8>=6.0.0           # 代码检查
+mypy>=1.5.0             # 类型检查
