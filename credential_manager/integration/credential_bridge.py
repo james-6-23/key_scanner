@@ -241,8 +241,8 @@ class CredentialBridge:
                     
                     # 添加到管理器
                     self.manager.add_credential(
-                        value=cred.value,
                         service_type=service_type,
+                        value=cred.value,
                         metadata={
                             'source': cred.source,
                             'discovered_at': cred.discovered_at.isoformat(),
@@ -350,8 +350,8 @@ class CredentialBridge:
                 if cred.confidence >= 0.5:  # 较低的阈值
                     service_type = self._determine_service_type(cred.service_type)
                     self.manager.add_credential(
-                        value=cred.value,
-                        service_type=service_type
+                        service_type=service_type,
+                        value=cred.value
                     )
                     imported += 1
                     
@@ -501,8 +501,8 @@ class GitHubTokenBridge:
                     token = line.strip()
                     if token and not token.startswith('#'):
                         self.credential_manager.add_credential(
-                            value=token,
-                            service_type=ServiceType.GITHUB
+                            service_type=ServiceType.GITHUB,
+                            value=token
                         )
                         
             logger.info(f"Loaded tokens from {self.tokens_file}")
@@ -557,8 +557,8 @@ class GitHubTokenBridge:
         """添加新token"""
         try:
             self.credential_manager.add_credential(
-                value=token,
-                service_type=ServiceType.GITHUB
+                service_type=ServiceType.GITHUB,
+                value=token
             )
             
             # 同步到文件
@@ -636,8 +636,8 @@ def migrate_from_token_manager(old_token_file: str, bridge: CredentialBridge) ->
                 token = line.strip()
                 if token and not token.startswith('#'):
                     bridge.manager.add_credential(
-                        value=token,
                         service_type=ServiceType.GITHUB,
+                        value=token,
                         metadata={'migrated_from': old_token_file}
                     )
                     migrated += 1

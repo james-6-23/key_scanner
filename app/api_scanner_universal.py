@@ -69,7 +69,8 @@ class UniversalAPIScanner:
         
         # 初始化组件
         self.config = Config()
-        self.file_manager = FileManager()
+        data_dir = self.config.DATA_PATH or './data'
+        self.file_manager = FileManager(data_dir)
         
         # 统计信息
         self.stats = {api_type: {

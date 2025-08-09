@@ -465,6 +465,29 @@ class CredentialManager:
             
             return status
     
+    def get_statistics(self) -> Dict[str, Any]:
+        """获取统计信息（兼容旧接口）"""
+        with self.lock:
+            # 统计各状态的凭证数量
+            by_status = {}
+            total_credentials = 0
+            total_health_score = 0
+            
+            for pool in self.pools.values():
+                for credential in pool.credentials:
+                    total_credentials += 1
+                    status_name = credential.status.value
+                    by_status[status_name] = by_status.get(status_name, 0) + 1
+                    total_health_score += credential.calculate_health_score()
+            
+            return {
+                'total_credentials': total_credentials,
+                'by_status': by_status,
+                'average_health_score': total_health_score / total_credentials if total_credentials > 0 else 0,
+                'pools': {service_type.value: pool.get_statistics() for service_type, pool in self.pools.items()},
+                'stats': self.stats.copy()
+            }
+    
     def get_all_credentials(self, service_type: ServiceType = None) -> List[Credential]:
         """获取所有凭证"""
         with self.lock:
