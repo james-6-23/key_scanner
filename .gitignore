@@ -212,6 +212,7 @@ todo.txt
 *token*
 !*example*
 !*template*
+!credential_manager/
 
 # User-specific settings
 user_config/

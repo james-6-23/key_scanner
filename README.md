@@ -1,413 +1,238 @@
-# 🔍 API密钥扫描器 - 高效的GitHub密钥发现工具
+# 🔍 API密钥扫描器 - 企业级多API密钥发现工具
 
 [![Docker](https://img.shields.io/badge/Docker-Ready-blue)](https://www.docker.com/)
 [![Python](https://img.shields.io/badge/Python-3.11+-green)](https://www.python.org/)
 [![License](https://img.shields.io/badge/License-MIT-yellow)](LICENSE)
 
-[English](README_EN.md) | 简体中文
-
 ## 📖 项目简介
 
-API密钥扫描器是一个专门用于在GitHub上发现和验证Google API密钥（特别是Gemini API密钥）的自动化工具。通过智能搜索和并行验证机制，能够高效地发现有效的API密钥。
+API密钥扫描器是一个专业的自动化工具，用于在GitHub上发现和验证多种API密钥。支持Gemini、OpenAI、Anthropic等7种主流API，具备企业级凭证管理和智能负载均衡能力。
 
 ### ✨ 核心特性
 
+- 🎯 **多API支持** - 支持7种主流API（Gemini、OpenAI、Anthropic、AWS、Azure、Cohere、HuggingFace）
 - 🚀 **并行验证** - 多线程并发验证，大幅提升效率
+- 🔑 **企业级凭证管理** - 8种负载均衡策略，自愈机制，加密存储
+- 🐳 **Docker一键部署** - 完整的容器化解决方案
+- 📊 **实时监控** - WebSocket监控仪表板，健康度评分
+- 🔄 **智能Token管理** - 自动生命周期管理，智能轮换
 - 🌐 **代理支持** - 集成WARP代理，避免IP限制
-- 🐳 **Docker部署** - 一键部署，开箱即用
-- ⚡ **UV加速** - 使用UV包管理器，依赖安装速度提升10倍
-- 📊 **智能过滤** - 自动过滤文档、示例等无效文件
-- 💾 **断点续传** - 支持增量扫描，避免重复工作
-- 🔄 **外部同步** - 支持与外部服务同步发现的密钥
-- 🔑 **智能Token管理** - 双模式配置，自动生命周期管理
-
-## 🆕 最新更新
-
-### 改进版扫描器
-我们推出了改进版扫描器，解决了数据丢失和Token不一致的问题：
-
-- **实时数据保存** - 每找到密钥立即保存到磁盘
-- **优雅退出** - Ctrl+C会保存进度后安全退出
-- **统一Token管理** - 所有组件使用相同的Token源
-- **诊断工具** - 快速检查系统配置问题
-
-```bash
-# 运行诊断工具
-python diagnose_issues.py
-
-# 使用改进版扫描器
-python app/api_key_scanner_improved.py
-```
-
-详见 [改进版扫描器指南](IMPROVED_SCANNER_GUIDE.md)
 
 ## 🚀 快速开始
 
-### 方式一：统一启动器（最新推荐）
-```bash
-# Linux/Mac
-./unified_launcher.sh
+### 方式一：Docker部署（推荐）
 
-# Windows
-unified_launcher.bat
+```bash
+# Windows用户
+docker-start.bat
+
+# Linux/Mac用户
+chmod +x docker-start.sh
+./docker-start.sh
 ```
 
-启动器提供交互式菜单，可选择：
-- Docker容器部署
-- 本地环境运行
-- 系统诊断
-- 配置验证
-
-### 方式二：Docker部署
-
-最简单的部署方式，集成WARP代理，无需担心网络限制：
+### 方式二：交互式启动器
 
 ```bash
-# 1. 克隆项目
-git clone https://github.com/james-6-23/key_scanner.git
-cd key_scanner
-
-# 2. 准备配置文件
-cp .env.docker .env
-cp queries.example queries.txt
-
-# 3. 编辑配置（添加GitHub Token）
-# 编辑 .env 文件，设置 GITHUB_TOKENS=你的token
-
-# 4. 启动服务
-docker-compose up -d
-
-# 5. 查看日志
-docker-compose logs -f
+python scanner_launcher.py
 ```
 
-### 方式三：本地部署
+启动器提供：
+- 🎮 交互式菜单
+- 🔍 多API类型选择
+- 📝 查询模板管理
+- 🛠️ 环境自动检查
 
-如果您已经有可用的代理服务，可以选择本地部署：
-
-```bash
-# 1. 克隆项目
-git clone https://github.com/james-6-23/key_scanner.git
-cd key_scanner
-
-# 2. 安装UV（可选，但推荐）
-curl -LsSf https://astral.sh/uv/install.sh | sh
-
-# 3. 创建虚拟环境并安装依赖
-# 使用快速搭建脚本（推荐）
-./setup_python_env.sh
-
-# 或手动安装依赖：
-
-# 使用UV（推荐）
-uv venv
-source .venv/bin/activate  # Windows: .venv\Scripts\activate
-uv pip install -r requirements.txt
-
-# 或使用传统pip
-python -m venv venv
-source venv/bin/activate
-pip install -r requirements.txt
-
-# 4. 配置环境变量
-cp env.example .env
-# 编辑 .env 文件：
-# - 设置 GITHUB_TOKENS=你的token
-# - 设置 PROXY=http://127.0.0.1:1080 (如果有外部代理)
-
-# 5. 准备查询文件
-cp queries.example queries.txt
-
-# 6. 运行程序
-# 激活虚拟环境（如果未激活）
-source .venv/bin/activate  # Windows: .venv\Scripts\activate
-
-# 运行主程序
-python app/api_key_scanner.py
-
-# 运行Token健康监控工具
-python token_health_monitor.py github_tokens.txt
-```
-
-### 方式三：使用外部WARP代理
-
-如果需要单独部署WARP代理供本地程序使用：
+### 方式三：直接运行
 
 ```bash
-# 1. 部署WARP代理
-docker run -d \
-  --name warp \
-  --restart always \
-  -p 127.0.0.1:1080:1080 \
-  -e WARP_SLEEP=2 \
-  --cap-add NET_ADMIN \
-  --sysctl net.ipv6.conf.all.disable_ipv6=0 \
-  --sysctl net.ipv4.conf.all.src_valid_mark=1 \
-  -v ./warp-data:/var/lib/cloudflare-warp \
-  caomingjun/warp
+# 扫描Gemini（默认）
+python app/api_key_scanner_super.py
 
-# 2. 在.env中配置代理
-PROXY=http://127.0.0.1:1080
+# 扫描多个API
+python app/api_key_scanner_super.py --api-types gemini,openai,anthropic
 
-# 3. 运行本地程序
-python app/api_key_scanner.py
+# 使用通用扫描器
+python app/api_scanner_universal.py
 ```
 
 ## 📋 配置说明
 
-### 必需配置
+### 基础配置（.env）
 
-| 配置项 | 说明 | 示例 |
-|--------|------|------|
-| `GITHUB_TOKENS` | GitHub API令牌，支持多个 | `ghp_token1,ghp_token2` |
-
-### Token配置模式
-
-系统支持两种Token配置模式：
-
-#### 模式1：小规模部署（默认）
 ```env
-# 在.env中配置逗号分隔的tokens
-GITHUB_TOKENS=ghp_token1,ghp_token2,ghp_token3
-USE_EXTERNAL_TOKEN_FILE=false
+# GitHub Token（必需）
+GITHUB_TOKENS=ghp_token1,ghp_token2
+
+# API类型设置
+DEFAULT_API_TYPE=gemini
+SCAN_API_TYPES=gemini,openai,anthropic
+
+# 代理设置（可选）
+PROXY=http://warp:1080
+
+# 凭证管理
+USE_CREDENTIAL_MANAGER=true
+CREDENTIAL_AUTO_HARVEST=false  # 高级功能，默认关闭
 ```
 
-#### 模式2：大规模部署
-```env
-# 使用外部文件管理大量tokens
-USE_EXTERNAL_TOKEN_FILE=true
-GITHUB_TOKENS_FILE=github_tokens.txt
-```
+### 查询模板
 
-创建`github_tokens.txt`：
-```
-ghp_production_token_1
-ghp_production_token_2
-ghp_production_token_3
-# 支持注释
-```
-
-### 可选配置
-
-| 配置项 | 说明 | 默认值 |
-|--------|------|--------|
-| `PROXY` | 代理服务器地址 | 无 |
-| `DATE_RANGE_DAYS` | 仓库更新时间过滤（天） | 730 |
-| `HAJIMI_MAX_WORKERS` | 并行验证线程数 | 10 |
-| `HAJIMI_BATCH_SIZE` | 批处理大小 | 10 |
-| `FILE_PATH_BLACKLIST` | 文件路径黑名单 | readme,docs,test等 |
-| `TOKEN_AUTO_REMOVE_EXHAUSTED` | 自动移除耗尽的tokens | true |
-| `TOKEN_MIN_REMAINING_CALLS` | 最小剩余调用次数 | 10 |
-
-### 查询配置
-
-编辑 `queries.txt` 文件来自定义搜索查询。每行一个GitHub搜索语句：
+每个API都有独立的查询模板文件：
 
 ```
-AIzaSy in:file
-AIzaSy in:file filename:.env
-AIzaSy in:file extension:json
+config/queries/
+├── gemini.txt      # Gemini API查询
+├── openai.txt      # OpenAI API查询
+├── anthropic.txt   # Anthropic API查询
+└── ...
 ```
 
 ## 🏗️ 项目结构
 
 ```
 key_scanner/
-├── app/                    # 应用主程序
-│   └── api_key_scanner.py  # 主扫描器
-├── utils/                  # 工具模块
-│   ├── file_manager.py     # 文件管理
-│   ├── github_client.py    # GitHub API客户端
-│   └── parallel_validator.py # 并行验证器
-├── common/                 # 公共模块
-│   ├── config.py          # 配置管理
-│   └── Logger.py          # 日志系统
-├── docker-compose.yml      # Docker编排文件
-├── Dockerfile             # Docker镜像定义
-├── queries.txt            # 搜索查询配置
-├── .env                   # 环境变量配置
-└── data/                  # 数据存储目录
-    ├── keys/              # 发现的密钥
-    └── logs/              # 运行日志
+├── app/                        # 应用主程序
+│   ├── api_key_scanner_super.py    # 超级版扫描器（推荐）
+│   ├── api_scanner_universal.py    # 通用API扫描器
+│   └── api_key_scanner.py         # 基础版扫描器
+├── credential_manager/         # 凭证管理系统
+│   ├── core/                  # 核心模块
+│   ├── balancer/              # 负载均衡
+│   ├── discovery/             # Token发现
+│   └── monitoring/            # 监控系统
+├── config/                    # 配置文件
+│   ├── api_patterns.json      # API配置定义
+│   └── queries/               # 查询模板
+├── docker-compose.yml         # Docker编排
+├── scanner_launcher.py        # 交互式启动器
+└── docs/                      # 文档
 ```
 
 ## 🔧 高级功能
 
-### Token健康监控工具
+### 三个扫描器版本对比
 
-系统包含独立的Token健康监控工具，提供全面的健康检查：
+| 版本 | 适用场景 | 主要特性 |
+|------|----------|----------|
+| **超级版** 🆕 | 企业级部署 | 凭证管理、自愈机制、监控仪表板、多API支持 |
+| **通用版** | 多API扫描 | 配置驱动、灵活扩展、支持自定义API |
+| **基础版** | 快速测试 | 简单高效、适合单一API扫描 |
 
-```bash
-# 单次健康检查
-python token_health_monitor.py github_tokens.txt
+### 凭证管理系统
 
-# 持续监控模式
-python token_health_monitor.py github_tokens.txt --continuous
+- **8种负载均衡策略**：quota_aware、adaptive、weighted_round_robin等
+- **自愈机制**：自动检测和恢复失效凭证
+- **加密存储**：Fernet对称加密保护敏感数据
+- **生命周期管理**：完整的凭证生命周期自动化
+
+### Token自动收集（高级特性）
+
+⚠️ **此功能默认关闭，需要显式启用**
+
+```env
+# 在.env中启用
+CREDENTIAL_AUTO_HARVEST=true
+CREDENTIAL_HARVEST_RISK_THRESHOLD=2
 ```
 
-监控指标：
-- 🏥 健康评分（0-100分）
-- 📊 实时性能指标
-- 🚨 智能告警系统
-- 📈 历史趋势分析
+功能包括：
+- 智能发现潜在tokens
+- 多层风险评估
+- 蜜罐检测
+- 沙箱验证
 
-详细使用请参考 [Token健康监控指南](TOKEN_HEALTH_MONITOR_GUIDE.md)
+## 🐳 Docker部署
 
-### 并行验证机制
+### 完整部署
 
-系统采用多线程并行验证，显著提升验证效率：
+包含所有组件：WARP代理、Redis缓存、监控面板
 
-- 自动分配验证任务到多个工作线程
-- 智能代理轮换，避免单点限流
-- 批量验证支持，减少网络开销
+```bash
+docker-compose up -d
+```
 
-### Token生命周期管理
+### 最小部署
 
-系统自动管理GitHub tokens的完整生命周期：
+仅核心功能，适合资源受限环境
 
-- **自动监控**：实时监控每个token的API速率限制
-- **智能轮换**：自动轮换使用可用的tokens
-- **自动归档**：耗尽或无效的tokens自动归档到备份文件
-- **自动恢复**：限流时间过后自动恢复token使用
-- **状态持久化**：token状态信息持久化保存
+```bash
+docker-compose -f docker-compose.minimal.yml up -d
+```
 
-详细配置请参考 [Token管理指南](docs/TOKEN_MANAGEMENT_GUIDE.md)
+### 管理命令
 
-### 增量扫描
+```bash
+# 查看状态
+docker-compose ps
 
-支持断点续传和增量扫描：
+# 查看日志
+docker-compose logs -f scanner
 
-- 自动记录已扫描的文件SHA
-- 跳过已处理的查询
-- 基于时间戳的增量更新
+# 进入启动器
+docker-compose exec scanner python scanner_launcher.py
 
-### 代理管理
+# 停止服务
+docker-compose down
+```
 
-灵活的代理配置：
+## 📊 监控和日志
 
-- 支持HTTP/HTTPS/SOCKS5代理
-- 多代理轮换
-- 自动重试机制
+### 监控面板
+
+访问 http://localhost:8080 查看：
+- API调用统计
+- 凭证健康度
+- 性能指标
+- 实时日志
+
+### 日志文件
+
+```
+logs/
+├── scanner.log       # 主扫描器日志
+├── credential.log    # 凭证管理日志
+└── error.log        # 错误日志
+```
 
 ## 🔧 故障排除
 
-如果遇到以下问题：
-
-### 数据未保存
-- 使用改进版扫描器：`python app/api_key_scanner_improved.py`
-- 使用Ctrl+C优雅退出，不要强制终止
-
-### Token数量不一致
-- 运行诊断工具：`python diagnose_issues.py`
-- 检查所有组件使用相同的Token配置
-
-### 详细故障排除
-参见 [改进版扫描器指南](IMPROVED_SCANNER_GUIDE.md)
-
-## 📊 运行效果
-
-```
-🚀 HAJIMI KING STARTING (Parallel Validation Edition)
-⏰ Started at: 2024-12-07 10:00:00
-⚡ Parallel validation enabled with 10 workers
-✅ System ready - Starting scan
-
-🔍 Processing query: AIzaSy in:file
-🔑 Found 5 suspected key(s), starting parallel validation...
-✅ VALID: AIzaSyXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
-⚡ Parallel validation completed: 5 keys in 2.3s (2.2 keys/s)
-💾 Saved 1 valid key(s)
-
-📊 Token Status - Active: 8/10, Remaining calls: 35,420
-```
-
-### Token健康仪表板
-
-```
-🔑 TOKEN HEALTH MONITOR DASHBOARD 🔑
-=====================================
-Token         Status      Health  Remaining  Success%
-ghp_abc...    ✓ Active    95%     4523       98.5%
-ghp_def...    ⚠ Limited   45%     0          95.0%
-ghp_ghi...    ✗ Invalid   0%      0          0.0%
-```
-
-## 🐛 故障排查
-
 ### 常见问题
 
-1. **GitHub API限流**
-   - 解决方案：添加更多GitHub Token到配置中
+1. **Docker未安装**
+   - Windows: [Docker Desktop](https://docs.docker.com/desktop/install/windows-install/)
+   - Linux: `curl -fsSL https://get.docker.com | sh`
 
-2. **代理连接失败**
-   - 检查代理服务状态：`docker ps`
-   - 重启代理：`docker restart warp`
+2. **端口被占用**
+   - 修改docker-compose.yml中的端口映射
 
-3. **找不到queries.txt**
-   - 确认文件存在：`ls -la queries.txt`
-   - 从示例创建：`cp queries.example queries.txt`
+3. **内存不足**
+   - 使用最小配置：`docker-compose -f docker-compose.minimal.yml up -d`
 
-## 📝 更新日志
+4. **Token配置问题**
+   - 检查.env文件中的GITHUB_TOKENS配置
+   - 确保Token有足够的API调用配额
 
-- **v1.0.0** (2024-12)
-  - 初始版本发布
-  - 支持Docker一键部署
-  - 集成WARP代理
-  - 并行验证机制
+## 📚 文档
 
-## 🤝 贡献指南
+- [Docker部署指南](docs/DOCKER_DEPLOYMENT_GUIDE.md)
+- [Docker快速开始](DOCKER_QUICKSTART.md)
+- [多API扫描指南](docs/MULTI_API_SCANNING_GUIDE.md)
+- [项目完成总结](PROJECT_COMPLETION_SUMMARY.md)
+
+## 🤝 贡献
 
 欢迎提交Issue和Pull Request！
 
-1. Fork本项目
-2. 创建特性分支 (`git checkout -b feature/AmazingFeature`)
-3. 提交更改 (`git commit -m 'Add some AmazingFeature'`)
-4. 推送到分支 (`git push origin feature/AmazingFeature`)
-5. 开启Pull Request
+## 📝 许可证
 
-## 🛠️ 工具集
-
-本项目包含以下工具：
-
-| 工具 | 功能 | 使用方法 |
-|------|------|----------|
-| **主扫描器** | API密钥扫描和验证 | `python app/api_key_scanner.py` |
-| **改进版扫描器** 🆕 | 增强数据持久化版本 | `python app/api_key_scanner_improved.py` |
-| **诊断工具** 🆕 | 系统配置诊断 | `python diagnose_issues.py` |
-| **Token健康监控** | Token健康检查和监控 | `python token_health_monitor.py` |
-| **统一启动器** 🆕 | 交互式启动菜单 | `./unified_launcher.sh` 或 `unified_launcher.bat` |
-| **快速部署脚本** | Docker一键部署 | `./quick_start.sh` |
-| **环境搭建脚本** | Python环境快速搭建 | `./setup_python_env.sh` |
-
-##  许可证
-
-本项目采用 MIT 许可证 - 查看 [LICENSE](LICENSE) 文件了解详情
+MIT License - 查看 [LICENSE](LICENSE) 文件
 
 ## ⚠️ 免责声明
 
-本工具仅供安全研究和教育目的使用。使用者应遵守相关法律法规，不得用于非法用途。作者不对使用本工具造成的任何后果负责。
-
-## 🔗 相关链接
-
-### 核心文档
-- [改进版扫描器指南](IMPROVED_SCANNER_GUIDE.md) 🆕
-- [Token管理指南](docs/TOKEN_MANAGEMENT_GUIDE.md)
-- [Token健康监控指南](TOKEN_HEALTH_MONITOR_GUIDE.md)
-- [详细部署文档](DOCKER_DEPLOY_GUIDE.md)
-- [综合部署方案](DEPLOYMENT_GUIDE.md)
-
-### 配置示例
-- [环境变量说明](env.example)
-- [Docker环境配置](.env.docker)
-- [查询语法示例](queries.example)
-- [Token文件示例](github_tokens.example)
-
-### 快速参考
-- [Docker快速参考](README_DOCKER.md)
-- [英文文档](README_EN.md)
+本工具仅供安全研究和教育目的使用。使用者应遵守相关法律法规，不得用于非法用途。
 
 ---
 
-**作者**: Key Scanner Team  
-**版本**: 1.0.0  
+**版本**: 2.0.0  
 **更新**: 2024-12
