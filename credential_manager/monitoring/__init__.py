@@ -2,8 +2,10 @@
 Monitoring module for credential management
 """
 
-from .dashboard import MonitoringDashboard
+from .dashboard import Dashboard, create_dashboard, ConsoleDashboard
 
 __all__ = [
-    "MonitoringDashboard",
+    "Dashboard",
+    "create_dashboard",
+    "ConsoleDashboard",
 ]

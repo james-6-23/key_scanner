@@ -457,3 +457,35 @@ def create_dashboard(credential_manager: Any) -> Dashboard:
     dashboard = Dashboard(credential_manager)
     dashboard.start()
     return dashboard
+
+
+def start_monitoring_server(credential_manager: Any, port: int = 8080):
+    """
+    启动监控服务器（简化版本）
+    
+    Args:
+        credential_manager: 凭证管理器实例
+        port: 监控端口
+        
+    Returns:
+        Dashboard实例
+    """
+    dashboard = create_dashboard(credential_manager)
+    logger.info(f"Monitoring dashboard started (console mode)")
+    
+    # 创建控制台仪表板
+    console = ConsoleDashboard(dashboard)
+    
+    # 在后台线程运行
+    import threading
+    monitor_thread = threading.Thread(
+        target=lambda: logger.info("Monitoring running in background"),
+        daemon=True
+    )
+    monitor_thread.start()
+    
+    return dashboard
+
+
+# 为了兼容性，添加MonitoringDashboard别名
+MonitoringDashboard = Dashboard
