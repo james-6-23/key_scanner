@@ -480,28 +480,50 @@ class CredentialManager:
             return status
     
     def get_statistics(self) -> Dict[str, Any]:
-        """获取统计信息（兼容旧接口）"""
-        with self.lock:
-            # 统计各状态的凭证数量
-            by_status = {}
-            total_credentials = 0
-            total_health_score = 0
+        """获取统计信息"""
+        try:
+            all_credentials = self.vault.get_all_credentials()
             
-            for pool in self.pools.values():
-                for credential in pool.credentials:
-                    total_credentials += 1
-                    status_name = credential.status.value
-                    by_status[status_name] = by_status.get(status_name, 0) + 1
-                    total_health_score += credential.calculate_health_score()
+            # 初始化统计数据
+            by_status = {}
+            by_service = {}
+            total_health = 0
+            
+            for cred in all_credentials:
+                # 统计状态
+                status = cred.status.value if hasattr(cred.status, "value") else str(cred.status)
+                by_status[status] = by_status.get(status, 0) + 1
+                
+                # 统计服务类型
+                service = cred.service_type.value if hasattr(cred.service_type, "value") else str(cred.service_type)
+                by_service[service] = by_service.get(service, 0) + 1
+                
+                # 累计健康分数
+                total_health += cred.health_score
+            
+            total_count = len(all_credentials)
+            avg_health = total_health / total_count if total_count > 0 else 0
             
             return {
-                'total_credentials': total_credentials,
-                'by_status': by_status,
-                'average_health_score': total_health_score / total_credentials if total_credentials > 0 else 0,
-                'pools': {service_type.value: pool.get_statistics() for service_type, pool in self.pools.items()},
-                'stats': self.stats.copy()
+                "total_credentials": total_count,
+                "by_status": by_status,
+                "by_service": by_service,
+                "average_health_score": avg_health,
+                "active_count": by_status.get("active", 0),
+                "exhausted_count": by_status.get("exhausted", 0),
+                "invalid_count": by_status.get("invalid", 0)
             }
-    
+        except Exception as e:
+            logger.error(f"Error getting statistics: {e}")
+            return {
+                "total_credentials": 0,
+                "by_status": {},
+                "by_service": {},
+                "average_health_score": 0,
+                "active_count": 0,
+                "exhausted_count": 0,
+                "invalid_count": 0
+            }
     def get_all_credentials(self, service_type: ServiceType = None) -> List[Credential]:
         """获取所有凭证"""
         with self.lock:

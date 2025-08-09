@@ -186,12 +186,13 @@ class Dashboard:
             )
             
         # 记录服务类型分布
-        for service, count in stats['by_service'].items():
-            self.metrics_collector.record_metric(
-                f'service_{service}',
-                count,
-                tags={'service': service}
-            )
+        if 'by_service' in stats:
+            for service, count in stats['by_service'].items():
+                self.metrics_collector.record_metric(
+                    f'service_{service}',
+                    count,
+                    tags={'service': service}
+                )
             
         # 检查告警条件
         self._check_alerts(stats)

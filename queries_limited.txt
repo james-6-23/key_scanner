@@ -1,0 +1,6 @@
+# 限制查询数量以避免API配额耗尽
+AIzaSy in:file
+gemini api key in:file
+openai api key in:file
+sk- in:file extension:env
+api_key in:file extension:json
