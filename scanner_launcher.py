@@ -632,4 +632,19 @@ def main():
                 print(f"{Colors.FAIL}无效的选择，请输入0-7之间的数字{Colors.ENDC}")
                 
         except KeyboardInterrupt:
-            print(f"\n\n{Colors.WARNING}用户中断{Colors
+            print(f"\n\n{Colors.WARNING}用户中断{Colors.ENDC}")
+            continue
+        except Exception as e:
+            print(f"{Colors.FAIL}发生错误: {e}{Colors.ENDC}")
+            continue
+
+
+if __name__ == "__main__":
+    try:
+        main()
+    except KeyboardInterrupt:
+        print(f"\n{Colors.WARNING}程序退出{Colors.ENDC}")
+        sys.exit(0)
+    except Exception as e:
+        print(f"{Colors.FAIL}程序错误: {e}{Colors.ENDC}")
+        sys.exit(1)
