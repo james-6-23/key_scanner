@@ -1,10 +1,16 @@
 #!/usr/bin/env python3
+# -*- coding: utf-8 -*-
 """
 扫描器诊断工具 - 检查和修复常见问题
 """
 
 import sys
 import os
+import io
+
+# 设置标准输出编码为UTF-8
+sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8')
+sys.stderr = io.TextIOWrapper(sys.stderr.buffer, encoding='utf-8')
 import subprocess
 from pathlib import Path
 import json
@@ -38,9 +44,9 @@ def check_scanner_files():
     all_exist = True
     for scanner in scanners:
         if Path(scanner).exists():
-            print(f"  ✅ {scanner}")
+            print(f"  [OK] {scanner}")
         else:
-            print(f"  ❌ {scanner} - 缺失")
+            print(f"  [X] {scanner} - 缺失")
             all_exist = False
     
     return all_exist
@@ -59,45 +65,45 @@ errors = []
 # 测试基础导入
 try:
     from common.config import Config
-    print("✅ common.config")
+    print("[OK] common.config")
 except ImportError as e:
-    print(f"❌ common.config: {e}")
+    print(f"[X] common.config: {e}")
     errors.append(str(e))
 
 try:
     from common.Logger import Logger
-    print("✅ common.Logger")
+    print("[OK] common.Logger")
 except ImportError as e:
-    print(f"❌ common.Logger: {e}")
+    print(f"[X] common.Logger: {e}")
     errors.append(str(e))
 
 try:
     from utils.file_manager import FileManager
-    print("✅ utils.file_manager")
+    print("[OK] utils.file_manager")
 except ImportError as e:
-    print(f"❌ utils.file_manager: {e}")
+    print(f"[X] utils.file_manager: {e}")
     errors.append(str(e))
 
 try:
     from utils.github_client import GitHubClient
-    print("✅ utils.github_client")
+    print("[OK] utils.github_client")
 except ImportError as e:
-    print(f"❌ utils.github_client: {e}")
+    print(f"[X] utils.github_client: {e}")
     errors.append(str(e))
 
 try:
     from utils.parallel_validator import ParallelValidator
-    print("✅ utils.parallel_validator")
+    print("[OK] utils.parallel_validator")
 except ImportError as e:
-    print(f"❌ utils.parallel_validator: {e}")
+    print(f"[X] utils.parallel_validator: {e}")
     errors.append(str(e))
 
 # 测试凭证管理器（可选）
 try:
     from credential_manager import CredentialManager
-    print("✅ credential_manager")
+    print("[OK] credential_manager")
 except ImportError as e:
-    print(f"⚠️  credential_manager (可选): {e}")
+    print("[!] credential_manager (可选): {e}")
 
 sys.exit(0 if not errors else 1)
 """
@@ -121,30 +127,30 @@ sys.path.insert(0, str(Path.cwd()))
 try:
     # 尝试导入
     import app.api_key_scanner_super as scanner
-    print("✅ 成功导入api_key_scanner_super")
+    print("[OK] 成功导入api_key_scanner_super")
     
     # 检查关键类和函数
     if hasattr(scanner, 'HajimiKingSuper'):
-        print("✅ 找到HajimiKingSuper类")
+        print("[OK] 找到HajimiKingSuper类")
     else:
-        print("❌ 缺少HajimiKingSuper类")
+        print("[X] 缺少HajimiKingSuper类")
     
     if hasattr(scanner, 'validate_api_key'):
-        print("✅ 找到validate_api_key函数")
+        print("[OK] 找到validate_api_key函数")
     else:
-        print("❌ 缺少validate_api_key函数")
+        print("[X] 缺少validate_api_key函数")
     
     if hasattr(scanner, 'main'):
-        print("✅ 找到main函数")
+        print("[OK] 找到main函数")
     else:
-        print("❌ 缺少main函数")
+        print("[X] 缺少main函数")
         
 except ImportError as e:
-    print(f"❌ 导入失败: {e}")
+    print(f"[X] 导入失败: {e}")
     import traceback
     traceback.print_exc()
 except Exception as e:
-    print(f"❌ 其他错误: {e}")
+    print(f"[X] 其他错误: {e}")
     import traceback
     traceback.print_exc()
 """
@@ -164,27 +170,27 @@ def check_api_config():
     
     config_file = Path("config/api_patterns.json")
     if not config_file.exists():
-        print(f"  ❌ config/api_patterns.json 不存在")
+        print(f"  [X] config/api_patterns.json 不存在")
         return False
     
     try:
         with open(config_file, 'r', encoding='utf-8') as f:
             config = json.load(f)
         
-        print(f"  ✅ API配置文件存在")
+        print(f"  [OK] API配置文件存在")
         print(f"  支持的API类型: {', '.join(config.keys())}")
         
         # 检查查询文件
         for api_type in config.keys():
             query_file = Path(f"config/queries/{api_type}.txt")
             if query_file.exists():
-                print(f"  ✅ {api_type}.txt 查询文件存在")
+                print(f"  [OK] {api_type}.txt 查询文件存在")
             else:
-                print(f"  ⚠️  {api_type}.txt 查询文件缺失")
+                print(f"  [!] {api_type}.txt 查询文件缺失")
         
         return True
     except Exception as e:
-        print(f"  ❌ 读取配置失败: {e}")
+        print(f"  [X] 读取配置失败: {e}")
         return False
 
 def check_dependencies():
@@ -210,18 +216,18 @@ def check_dependencies():
     for module, package in required.items():
         try:
             __import__(module)
-            print(f"  ✅ {package}")
+            print(f"  [OK] {package}")
         except ImportError:
-            print(f"  ❌ {package} - 未安装")
+            print(f"  [X] {package} - 未安装")
             missing_required.append(package)
     
     print("\n可选依赖:")
     for module, package in optional.items():
         try:
             __import__(module)
-            print(f"  ✅ {package}")
+            print(f"  [OK] {package}")
         except ImportError:
-            print(f"  ⚠️  {package} - 未安装")
+            print(f"  [!] {package} - 未安装")
     
     if missing_required:
         print(f"\n{Colors.YELLOW}安装缺失的依赖:{Colors.RESET}")
@@ -241,10 +247,10 @@ def run_test_command():
     result = subprocess.run(cmd, capture_output=True, text=True, cwd=Path.cwd())
     
     if result.returncode == 0:
-        print(f"  ✅ 帮助命令执行成功")
+        print(f"  [OK] 帮助命令执行成功")
         return True
     else:
-        print(f"  ❌ 命令执行失败")
+        print(f"  [X] 命令执行失败")
         print(f"错误输出:")
         print(result.stderr)
         return False
@@ -311,7 +317,7 @@ def main():
     print_header("诊断结果")
     
     if not issues:
-        print(f"{Colors.GREEN}✅ 所有检查通过！扫描器应该可以正常运行。{Colors.RESET}")
+        print(f"{Colors.GREEN}[OK] 所有检查通过！扫描器应该可以正常运行。{Colors.RESET}")
     else:
         print(f"{Colors.RED}发现以下问题:{Colors.RESET}")
         for issue in issues:
