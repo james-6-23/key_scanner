@@ -156,8 +156,9 @@ class SuperAPIKeyScanner:
         # 初始化管理器
         self.credential_manager = get_credential_manager(credential_config)
         
-        # 创建集成桥接器
-        self.credential_bridge = CredentialBridge(self.credential_manager)
+        # 创建集成桥接器 - 传递配置路径而不是管理器实例
+        config_path = os.getenv('CREDENTIAL_CONFIG_PATH', 'config/credentials.json')
+        self.credential_bridge = CredentialBridge(config_path)
         
         # 导入现有tokens
         self._import_existing_tokens()
