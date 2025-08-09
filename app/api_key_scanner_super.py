@@ -495,15 +495,26 @@ class SuperAPIKeyScanner:
     
     def _update_credential_status(self):
         """更新凭证状态"""
-        status = self.credential_manager.get_status()
-        
-        # 显示凭证池状态
-        for service_type, pool_status in status['pools'].items():
-            logger.info(
-                f"🔑 {service_type} 池状态: "
-                f"活跃={pool_status['active_count']}/{pool_status['total_count']}, "
-                f"健康度={pool_status['health_score']:.1f}%"
-            )
+        try:
+            status = self.credential_manager.get_status()
+            
+            # 显示凭证池状态
+            if 'pools' in status:
+                for service_type, pool_status in status['pools'].items():
+                    # 安全地获取值，提供默认值
+                    active_count = pool_status.get('active_count', 0)
+                    total_count = pool_status.get('total_count', 0)
+                    health_score = pool_status.get('health_score', 0.0)
+                    
+                    logger.info(
+                        f"🔑 {service_type} 池状态: "
+                        f"活跃={active_count}/{total_count}, "
+                        f"健康度={health_score:.1f}%"
+                    )
+            else:
+                logger.warning("⚠️ 凭证池状态信息不可用")
+        except Exception as e:
+            logger.error(f"更新凭证状态时出错: {e}")
     
     def _show_statistics(self):
         """显示统计信息"""
