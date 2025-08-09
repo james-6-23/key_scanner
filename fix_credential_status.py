@@ -46,8 +46,14 @@ if hasattr(credential_manager, 'pools') and ServiceType.GITHUB in credential_man
     
     # 检查池中的所有凭证
     if hasattr(github_pool, 'credentials'):
-        for cred_id, credential in list(github_pool.credentials.items()):
-            if credential.status == CredentialStatus.PENDING:
+        # 处理 credentials 可能是列表或字典的情况
+        if isinstance(github_pool.credentials, dict):
+            credentials_list = list(github_pool.credentials.values())
+        else:
+            credentials_list = github_pool.credentials
+            
+        for credential in credentials_list:
+            if hasattr(credential, 'status') and credential.status == CredentialStatus.PENDING:
                 # 激活凭证
                 credential.status = CredentialStatus.ACTIVE
                 credential.health_score = 100.0  # 设置健康度为满分
