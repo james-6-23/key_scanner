@@ -399,6 +399,9 @@ class ParallelKeyValidator:
         logger.info("🔚 ParallelKeyValidator shutdown complete")
 
 
+# 为了向后兼容，创建别名
+ParallelValidator = ParallelKeyValidator
+
 # 创建全局验证器实例（可选）
 parallel_validator = None
 
