@@ -1,0 +1,99 @@
+# 最小化部署配置 - 仅包含核心功能
+# 使用方法: docker-compose -f docker-compose.minimal.yml up -d
+
+version: '3.8'
+
+services:
+  # 主应用服务 - 超级版扫描器（最小配置）
+  scanner:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: key-scanner-super:minimal
+    container_name: key-scanner-minimal
+    restart: unless-stopped
+    
+    # 环境变量
+    env_file:
+      - .env
+    environment:
+      # 基础配置
+      PYTHONUNBUFFERED: 1
+      TZ: Asia/Shanghai
+      
+      # 路径配置
+      QUERIES_FILE: /app/queries.txt
+      DATA_PATH: /app/data
+      CONFIG_PATH: /app/config
+      
+      # Token文件配置
+      USE_EXTERNAL_TOKEN_FILE: true
+      GITHUB_TOKENS_FILE: /app/github_tokens.txt
+      
+      # 使用文件存储（不需要Redis）
+      USE_CREDENTIAL_MANAGER: false
+      CREDENTIAL_STORAGE_TYPE: file
+      
+      # API配置
+      DEFAULT_API_TYPE: ${DEFAULT_API_TYPE:-gemini}
+      
+      # 禁用监控（减少资源占用）
+      ENABLE_MONITORING: false
+      
+      # 性能配置（适合单机）
+      HAJIMI_MAX_WORKERS: 5
+      HAJIMI_BATCH_SIZE: 5
+      HAJIMI_BATCH_INTERVAL: 30
+    
+    # 数据卷挂载
+    volumes:
+      # 查询文件
+      - ./queries.txt:/app/queries.txt:ro
+      - ./config/queries:/app/config/queries:ro
+      
+      # API配置文件
+      - ./config/api_patterns.json:/app/config/api_patterns.json:ro
+      
+      # GitHub tokens文件
+      - ./github_tokens.txt:/app/github_tokens.txt:ro
+      
+      # 环境变量文件
+      - ./.env:/app/.env:ro
+      
+      # 数据持久化（使用本地目录）
+      - ./data:/app/data
+      
+      # 日志持久化
+      - ./logs:/app/data/logs:rw
+    
+    # 资源限制（适合低配置机器）
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 1G
+        reservations:
+          cpus: '0.25'
+          memory: 256M
+    
+    # 日志配置
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "5m"
+        max-file: "3"
+    
+    # 健康检查
+    healthcheck:
+      test: ["CMD", "python", "-c", "import os; exit(0 if os.path.exists('/app/data') else 1)"]
+      interval: 60s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+    
+    # 交互式终端（用于启动器菜单）
+    stdin_open: true
+    tty: true
+
+# 不需要额外的网络配置，使用默认bridge网络
+# 不需要命名卷，直接使用本地目录挂载

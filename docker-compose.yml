@@ -45,18 +45,58 @@ services:
       retries: 3
       start_period: 40s
 
-  # 主应用服务
+  # Redis缓存服务（凭证管理系统需要）
+  redis:
+    image: redis:7-alpine
+    container_name: scanner-redis
+    restart: unless-stopped
+    
+    # 端口配置
+    expose:
+      - "6379"
+    
+    # 数据持久化
+    volumes:
+      - redis-data:/data
+    
+    # Redis配置
+    command: redis-server --appendonly yes --maxmemory 256mb --maxmemory-policy allkeys-lru
+    
+    # 资源限制
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 256M
+        reservations:
+          cpus: '0.1'
+          memory: 128M
+    
+    # 网络配置
+    networks:
+      - scanner-network
+    
+    # 健康检查
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+
+  # 主应用服务 - 超级版扫描器
   scanner:
     build:
       context: .
       dockerfile: Dockerfile
-    image: key-scanner:latest
-    container_name: key-scanner
+    image: key-scanner-super:latest
+    container_name: key-scanner-super
     restart: unless-stopped
     
-    # 依赖WARP代理服务
+    # 依赖服务
     depends_on:
       warp:
+        condition: service_healthy
+      redis:
         condition: service_healthy
     
     # 环境变量
@@ -64,34 +104,68 @@ services:
       - .env
     environment:
       # 代理配置
-      # 容器内部使用: http://warp:1080
-      # 宿主机使用: http://127.0.0.1:1080 (需要开启ports映射)
-      - PROXY=${PROXY:-http://warp:1080}
-      - PYTHONUNBUFFERED=1
-      - TZ=Asia/Shanghai
+      PROXY: ${PROXY:-http://warp:1080}
+      PYTHONUNBUFFERED: 1
+      TZ: Asia/Shanghai
+      
       # 性能优化
-      - HAJIMI_MAX_WORKERS=10
-      - HAJIMI_BATCH_SIZE=10
-      - HAJIMI_BATCH_INTERVAL=60
-      # 指定queries文件路径
-      - QUERIES_FILE=/app/queries.txt
-      - DATA_PATH=/app/data
+      HAJIMI_MAX_WORKERS: 10
+      HAJIMI_BATCH_SIZE: 10
+      HAJIMI_BATCH_INTERVAL: 60
+      
+      # 路径配置
+      QUERIES_FILE: /app/queries.txt
+      DATA_PATH: /app/data
+      CONFIG_PATH: /app/config
+      CREDENTIAL_MANAGER_PATH: /app/credential_manager
+      
       # Token文件配置
-      - USE_EXTERNAL_TOKEN_FILE=true
-      - GITHUB_TOKENS_FILE=/app/github_tokens.txt
+      USE_EXTERNAL_TOKEN_FILE: true
+      GITHUB_TOKENS_FILE: /app/github_tokens.txt
+      
+      # 凭证管理配置
+      USE_CREDENTIAL_MANAGER: true
+      CREDENTIAL_AUTO_HARVEST: ${CREDENTIAL_AUTO_HARVEST:-false}
+      CREDENTIAL_STORAGE_TYPE: ${CREDENTIAL_STORAGE_TYPE:-redis}
+      REDIS_URL: redis://redis:6379/0
+      
+      # API配置
+      DEFAULT_API_TYPE: ${DEFAULT_API_TYPE:-gemini}
+      SCAN_API_TYPES: ${SCAN_API_TYPES:-gemini}
+      
+      # 负载均衡策略
+      LOAD_BALANCE_STRATEGY: ${LOAD_BALANCE_STRATEGY:-adaptive}
+      
+      # 监控配置
+      ENABLE_MONITORING: ${ENABLE_MONITORING:-true}
+      MONITORING_INTERVAL: ${MONITORING_INTERVAL:-300}
     
     # 数据卷挂载
     volumes:
-      # 挂载本地queries.txt到容器根目录
+      # 查询文件（支持单个或目录）
       - ./queries.txt:/app/queries.txt:ro
-      # 挂载GitHub tokens文件
+      - ./config/queries:/app/config/queries:ro
+      
+      # API配置文件
+      - ./config/api_patterns.json:/app/config/api_patterns.json:ro
+      
+      # GitHub tokens文件
       - ./github_tokens.txt:/app/github_tokens.txt:ro
-      # 挂载环境变量文件
+      
+      # 环境变量文件
       - ./.env:/app/.env:ro
+      
       # 数据持久化
       - scanner-data:/app/data
+      
+      # 凭证存储
+      - credential-data:/app/credential_manager/storage
+      
       # 日志持久化
       - ./logs:/app/data/logs:rw
+      
+      # 监控数据
+      - ./monitoring:/app/data/monitoring:rw
     
     # 资源限制
     deploy:
@@ -108,8 +182,8 @@ services:
       driver: "json-file"
       options:
         max-size: "10m"
-        max-file: "3"
-        labels: "service=key-scanner"
+        max-file: "5"
+        labels: "service=key-scanner-super"
     
     # 网络配置
     networks:
@@ -117,11 +191,60 @@ services:
     
     # 健康检查
     healthcheck:
-      test: ["CMD", "pgrep", "-f", "api_key_scanner"]
+      test: ["CMD", "python", "-c", "import os; exit(0 if os.path.exists('/app/data') else 1)"]
       interval: 30s
       timeout: 10s
       retries: 3
       start_period: 60s
+    
+    # 交互式终端（用于启动器菜单）
+    stdin_open: true
+    tty: true
+
+  # 监控面板服务（可选）
+  monitor:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: key-scanner-super:latest
+    container_name: scanner-monitor
+    restart: unless-stopped
+    
+    # 依赖服务
+    depends_on:
+      - redis
+    
+    # 运行监控面板
+    command: ["python", "credential_manager/monitoring/dashboard.py"]
+    
+    # 环境变量
+    environment:
+      REDIS_URL: redis://redis:6379/0
+      TZ: Asia/Shanghai
+      PYTHONUNBUFFERED: 1
+    
+    # 端口映射（监控面板Web界面）
+    ports:
+      - "8080:8080"
+    
+    # 数据卷
+    volumes:
+      - ./monitoring:/app/data/monitoring:rw
+      - credential-data:/app/credential_manager/storage:ro
+    
+    # 网络配置
+    networks:
+      - scanner-network
+    
+    # 资源限制
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 512M
+        reservations:
+          cpus: '0.2'
+          memory: 256M
 
 # 网络定义
 networks:
@@ -135,4 +258,8 @@ networks:
 # 数据卷定义
 volumes:
   scanner-data:
+    driver: local
+  redis-data:
+    driver: local
+  credential-data:
     driver: local
