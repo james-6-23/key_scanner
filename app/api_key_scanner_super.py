@@ -96,7 +96,8 @@ class SuperAPIKeyScanner:
         self.config = Config()
         
         # 初始化文件管理器
-        self.file_manager = FileManager()
+        data_dir = self.config.DATA_PATH or './data'
+        self.file_manager = FileManager(data_dir)
         
         # 初始化高级凭证管理系统
         self._init_credential_manager()
