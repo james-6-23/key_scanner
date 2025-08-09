@@ -43,7 +43,7 @@ from credential_manager.discovery.token_harvester import get_token_harvester
 from credential_manager.monitoring.dashboard import start_monitoring_server
 
 # 导入增强版GitHub客户端
-from utils.github_client_enhanced import GitHubClientEnhanced
+from utils.github_client_enhanced import EnhancedGitHubClient
 
 # 导入通用API扫描器
 from api_scanner_universal import UniversalAPIScanner
@@ -81,7 +81,7 @@ class SuperAPIKeyScanner:
         self._init_credential_manager()
         
         # 初始化GitHub客户端（使用增强版）
-        self.github_client = GitHubClientEnhanced(self.credential_manager)
+        self.github_client = EnhancedGitHubClient(self.credential_manager)
         
         # 初始化并行验证器
         self.validator = ParallelValidator()
