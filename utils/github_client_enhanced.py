@@ -317,6 +317,120 @@ class EnhancedGitHubClient:
             "items": all_items
         }
     
+    async def search_repositories(self, query: str, max_results: int = 100) -> List[Dict[str, Any]]:
+        """
+        搜索GitHub仓库
+        
+        Args:
+            query: 搜索查询
+            max_results: 最大结果数
+            
+        Returns:
+            仓库列表
+        """
+        repositories = []
+        per_page = min(100, max_results)
+        pages = (max_results + per_page - 1) // per_page
+        
+        for page in range(1, pages + 1):
+            # 获取token
+            token, metadata = self._get_next_token()
+            if not token:
+                logger.error("❌ No tokens available for repository search")
+                break
+            
+            headers = {
+                "Accept": "application/vnd.github.v3+json",
+                "Authorization": f"token {token}",
+                "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36"
+            }
+            
+            params = {
+                "q": query,
+                "per_page": per_page,
+                "page": page,
+                "sort": "stars",
+                "order": "desc"
+            }
+            
+            try:
+                proxies = Config.get_random_proxy() if hasattr(Config, 'get_random_proxy') else None
+                
+                response = requests.get(
+                    "https://api.github.com/search/repositories",
+                    headers=headers,
+                    params=params,
+                    timeout=30,
+                    proxies=proxies
+                )
+                
+                # 更新token状态
+                self._update_token_status(
+                    token,
+                    metadata,
+                    dict(response.headers),
+                    success=response.status_code == 200
+                )
+                
+                response.raise_for_status()
+                data = response.json()
+                
+                items = data.get("items", [])
+                repositories.extend(items)
+                
+                if len(repositories) >= max_results:
+                    break
+                
+                # 页面间延迟
+                if page < pages:
+                    time.sleep(random.uniform(0.5, 1.5))
+                    
+            except Exception as e:
+                logger.error(f"❌ Failed to search repositories: {e}")
+                self._update_token_status(token, metadata, {}, False)
+                break
+        
+        return repositories[:max_results]
+    
+    async def search_in_repository(self, repo_name: str, query: str,
+                                  file_extensions: List[str] = None) -> List[Dict[str, Any]]:
+        """
+        在仓库中搜索文件
+        
+        Args:
+            repo_name: 仓库全名 (owner/repo)
+            query: 搜索查询
+            file_extensions: 文件扩展名列表
+            
+        Returns:
+            文件列表
+        """
+        files = []
+        
+        # 构建查询
+        search_query = f"{query} repo:{repo_name}"
+        
+        # 添加文件扩展名过滤
+        if file_extensions:
+            ext_query = " OR ".join([f"extension:{ext.lstrip('.')}" for ext in file_extensions])
+            search_query = f"{search_query} ({ext_query})"
+        
+        # 使用代码搜索API
+        result = self.search_for_keys(search_query, max_retries=3)
+        
+        if result and "items" in result:
+            for item in result["items"]:
+                file_info = {
+                    "path": item.get("path", ""),
+                    "html_url": item.get("html_url", ""),
+                    "repository": item.get("repository", {}),
+                    "sha": item.get("sha", ""),
+                    "score": item.get("score", 0)
+                }
+                files.append(file_info)
+        
+        return files
+    
     def get_file_content(self, item: Dict[str, Any]) -> Optional[str]:
         """
         获取文件内容
@@ -378,6 +492,24 @@ class EnhancedGitHubClient:
             logger.error(f"❌ Failed to fetch file content: {e}")
             self._update_token_status(token, token_metadata, {}, False)
             return None
+    
+    async def get_file_content(self, repo_name: str, file_path: str) -> Optional[str]:
+        """
+        获取文件内容（异步版本）
+        
+        Args:
+            repo_name: 仓库全名
+            file_path: 文件路径
+            
+        Returns:
+            文件内容
+        """
+        # 构造item格式以复用现有方法
+        item = {
+            "repository": {"full_name": repo_name},
+            "path": file_path
+        }
+        return self.get_file_content(item)
     
     def get_token_status(self) -> Dict[str, Any]:
         """获取token/凭证状态"""

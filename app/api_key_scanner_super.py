@@ -103,7 +103,7 @@ class SuperAPIKeyScanner:
         self._init_credential_manager()
         
         # 初始化GitHub客户端（使用增强版）
-        self.github_client = EnhancedGitHubClient(self.credential_manager)
+        self.github_client = EnhancedGitHubClient(use_credential_manager=True)
         
         # 初始化并行验证器
         self.validator = ParallelValidator()
@@ -255,15 +255,20 @@ class SuperAPIKeyScanner:
         progress_file = Path("data/scanner_progress.json")
         progress_file.parent.mkdir(parents=True, exist_ok=True)
         
+        # 复制stats并转换datetime对象
+        stats_copy = self.stats.copy()
+        if 'start_time' in stats_copy and isinstance(stats_copy['start_time'], datetime):
+            stats_copy['start_time'] = stats_copy['start_time'].isoformat()
+        
         progress_data = {
             'timestamp': datetime.now().isoformat(),
-            'stats': self.stats,
+            'stats': stats_copy,
             'credential_status': self.credential_manager.get_status() if hasattr(self, 'credential_manager') else {},
             'harvester_stats': self.token_harvester.get_statistics() if self.token_harvester else {}
         }
         
         with open(progress_file, 'w') as f:
-            json.dump(progress_data, f, indent=2)
+            json.dump(progress_data, f, indent=2, default=str)  # 添加default=str作为备用
         
         logger.info(f"✅ 进度已保存到 {progress_file}")
     

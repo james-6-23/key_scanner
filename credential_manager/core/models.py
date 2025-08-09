@@ -19,6 +19,7 @@ class ServiceType(Enum):
     ANTHROPIC = "anthropic"
     AZURE = "azure"
     AWS = "aws"
+    GCP = "gcp"
     CUSTOM = "custom"
 
 
