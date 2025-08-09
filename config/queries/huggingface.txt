@@ -1,0 +1,38 @@
+# ========================================
+# HUGGING FACE API 查询模板
+# ========================================
+# 使用: python app/api_key_scanner_super.py --api-types huggingface
+
+# ===== 基础搜索 =====
+hf_ in:file
+
+# ===== 环境变量文件 =====
+hf_ in:file filename:.env
+HUGGING_FACE_HUB_TOKEN in:file filename:.env
+HF_TOKEN in:file filename:.env
+HUGGINGFACE_TOKEN in:file filename:.env
+
+# ===== 配置文件 =====
+hf_ in:file extension:json filename:config
+HF_TOKEN in:file extension:json
+HUGGING_FACE_HUB_TOKEN in:file extension:yaml
+
+# ===== Python项目 =====
+hf_ in:file extension:py "huggingface"
+HF_TOKEN in:file language:python
+HUGGING_FACE_HUB_TOKEN in:file language:python
+huggingface_hub in:file language:python
+
+# ===== JavaScript项目 =====
+hf_ in:file extension:js "huggingface"
+HF_TOKEN in:file language:javascript
+
+# ===== 组合搜索 =====
+"hf_" "huggingface" in:file
+"HF_TOKEN" "transformers" in:file
+
+# ===== 时间过滤 =====
+hf_ in:file pushed:>2024-11-01
+
+# ===== 特殊搜索 =====
+hf_ in:file is:public

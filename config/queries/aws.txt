@@ -1,0 +1,47 @@
+# ========================================
+# AWS ACCESS KEYS 查询模板
+# ========================================
+# 使用: python app/api_key_scanner_super.py --api-types aws
+
+# ===== 基础搜索 =====
+AKIA in:file
+ASIA in:file
+
+# ===== 环境变量文件 =====
+AKIA in:file filename:.env
+AWS_ACCESS_KEY_ID in:file filename:.env
+AWS_SECRET_ACCESS_KEY in:file filename:.env
+AWS_SESSION_TOKEN in:file filename:.env
+
+# ===== AWS配置文件 =====
+AKIA in:file filename:credentials
+AKIA in:file filename:.aws/credentials
+AKIA in:file filename:aws-config
+aws_access_key_id in:file extension:ini
+aws_secret_access_key in:file extension:ini
+
+# ===== 配置文件 =====
+AKIA in:file extension:json filename:config
+AWS_ACCESS_KEY_ID in:file extension:json
+AWS_SECRET_ACCESS_KEY in:file extension:yaml
+
+# ===== Terraform文件 =====
+AKIA in:file extension:tf
+AKIA in:file filename:terraform.tfvars
+aws_access_key in:file extension:tf
+
+# ===== CloudFormation =====
+AKIA in:file filename:cloudformation.yml
+AKIA in:file filename:cloudformation.yaml
+
+# ===== 组合搜索 =====
+"AKIA" "AWS_SECRET" in:file
+"AWS_ACCESS_KEY_ID" "AWS_SECRET_ACCESS_KEY" in:file
+
+# ===== 时间过滤 =====
+AKIA in:file pushed:>2024-11-01
+AWS_ACCESS_KEY_ID in:file pushed:>2024-10-01
+
+# ===== 特殊搜索 =====
+AKIA in:file is:public
+AKIA in:file stars:>50

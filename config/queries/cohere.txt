@@ -1,0 +1,36 @@
+# ========================================
+# COHERE API 查询模板
+# ========================================
+# 使用: python app/api_key_scanner_super.py --api-types cohere
+
+# ===== 基础搜索 =====
+co- in:file
+
+# ===== 环境变量文件 =====
+co- in:file filename:.env
+COHERE_API_KEY in:file filename:.env
+COHERE_KEY in:file filename:.env
+
+# ===== 配置文件 =====
+co- in:file extension:json filename:config
+COHERE_API_KEY in:file extension:json
+COHERE_API_KEY in:file extension:yaml
+
+# ===== Python项目 =====
+co- in:file extension:py "cohere"
+COHERE_API_KEY in:file language:python
+cohere.Client in:file language:python
+
+# ===== JavaScript项目 =====
+co- in:file extension:js "cohere"
+COHERE_API_KEY in:file language:javascript
+
+# ===== 组合搜索 =====
+"co-" "cohere" in:file
+"COHERE_API_KEY" "co-" in:file
+
+# ===== 时间过滤 =====
+co- in:file pushed:>2024-11-01
+
+# ===== 特殊搜索 =====
+co- in:file is:public

@@ -1,0 +1,47 @@
+# ========================================
+# ANTHROPIC API (Claude) 查询模板
+# ========================================
+# 使用: python app/api_key_scanner_super.py --api-types anthropic
+
+# ===== 基础搜索 =====
+sk-ant in:file
+sk-ant-api in:file
+
+# ===== 环境变量文件 =====
+sk-ant in:file filename:.env
+sk-ant in:file filename:.env.local
+sk-ant in:file filename:.env.production
+ANTHROPIC_API_KEY in:file filename:.env
+CLAUDE_API_KEY in:file filename:.env
+ANTHROPIC_KEY in:file filename:.env
+
+# ===== 配置文件 =====
+sk-ant in:file extension:json filename:config
+sk-ant in:file extension:json filename:secrets
+ANTHROPIC_API_KEY in:file extension:json
+CLAUDE_API_KEY in:file extension:yaml
+
+# ===== Python项目 =====
+sk-ant in:file extension:py "anthropic"
+sk-ant in:file extension:py "claude"
+ANTHROPIC_API_KEY in:file language:python
+CLAUDE_API_KEY in:file language:python
+
+# ===== JavaScript/Node.js项目 =====
+sk-ant in:file extension:js "anthropic"
+sk-ant in:file extension:js "claude"
+ANTHROPIC_API_KEY in:file language:javascript
+
+# ===== 组合关键词搜索 =====
+"sk-ant" "claude" in:file
+"sk-ant" "anthropic" in:file
+"ANTHROPIC_API_KEY" "sk-ant" in:file
+"claude" "api" "key" in:file
+
+# ===== 时间过滤 =====
+sk-ant in:file pushed:>2024-11-01
+ANTHROPIC_API_KEY in:file pushed:>2024-10-01
+
+# ===== 特殊搜索 =====
+sk-ant in:file is:public
+sk-ant in:file stars:>50

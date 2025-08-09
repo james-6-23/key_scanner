@@ -1,6 +1,11 @@
-# GitHub搜索查询配置文件 - 优化版本
+# GitHub搜索查询配置文件 - 多API版本
 # 每行一个查询语句，支持GitHub搜索语法
 # 以#开头的行为注释，空行会被忽略
+# 默认扫描Gemini，可通过--api-types参数指定其他API
+
+# ========================================
+# GEMINI API (Google) - 默认
+# ========================================
 
 # ===== 第一阶段：高价值目标搜索 =====
 # 基础广泛搜索
@@ -36,14 +41,6 @@ AIzaSy in:file extension:yml filename:config
 AIzaSy in:file extension:yaml filename:secrets
 AIzaSy in:file extension:yml filename:secrets
 
-# TOML 配置文件
-AIzaSy in:file extension:toml filename:config
-AIzaSy in:file extension:toml filename:pyproject
-
-# INI 配置文件
-AIzaSy in:file extension:ini filename:config
-AIzaSy in:file extension:cfg filename:config
-
 # ===== 第三阶段：编程语言特定搜索 =====
 # Python 项目
 AIzaSy in:file extension:py "GEMINI_API_KEY"
@@ -51,179 +48,223 @@ AIzaSy in:file extension:py "gemini_api_key"
 AIzaSy in:file extension:py "GOOGLE_API_KEY"
 AIzaSy in:file language:python filename:config.py
 AIzaSy in:file language:python filename:settings.py
-AIzaSy in:file language:python filename:secrets.py
-AIzaSy in:file language:python filename:constants.py
 
 # JavaScript/Node.js 项目
 AIzaSy in:file extension:js "GEMINI_API_KEY"
 AIzaSy in:file extension:js "process.env"
 AIzaSy in:file language:javascript filename:config.js
-AIzaSy in:file language:javascript filename:constants.js
-AIzaSy in:file filename:package.json "AIzaSy"
 
-# TypeScript 项目
-AIzaSy in:file extension:ts "GEMINI_API_KEY"
-AIzaSy in:file language:typescript filename:config.ts
-AIzaSy in:file language:typescript filename:constants.ts
-
-# PHP 项目
-AIzaSy in:file extension:php "GEMINI_API_KEY"
-AIzaSy in:file language:php filename:config.php
-
-# Java 项目
-AIzaSy in:file extension:properties "gemini"
-AIzaSy in:file language:java filename:application.properties
-AIzaSy in:file language:java filename:config.properties
-
-# Go 项目
-AIzaSy in:file extension:go "GEMINI_API_KEY"
-AIzaSy in:file language:go filename:config.go
-
-# Ruby 项目
-AIzaSy in:file extension:rb "GEMINI_API_KEY"
-AIzaSy in:file language:ruby filename:config.rb
-
-# C# 项目
-AIzaSy in:file extension:cs "GEMINI_API_KEY"
-AIzaSy in:file filename:appsettings.json "AIzaSy"
-
-# ===== 第四阶段：特殊文件类型 =====
-# 纯文本密钥文件
-AIzaSy in:file extension:txt filename:keys
-AIzaSy in:file extension:txt filename:api
-AIzaSy in:file extension:txt filename:secrets
-AIzaSy in:file extension:txt filename:tokens
-AIzaSy in:file extension:txt filename:credentials
-AIzaSy in:file extension:txt filename:gemini
-
-# 临时和备份文件
-AIzaSy in:file filename:backup
-AIzaSy in:file filename:temp
-AIzaSy in:file filename:tmp
-AIzaSy in:file extension:bak
-AIzaSy in:file extension:old
-
-# 数据库配置
-AIzaSy in:file filename:database.yml
-AIzaSy in:file filename:db.json
-
-# ===== 第五阶段：组合关键词搜索 =====
-# 多关键词组合
+# ===== 第四阶段：组合关键词搜索 =====
 "AIzaSy" "gemini" in:file
 "AIzaSy" "google" "api" in:file
-"AIzaSy" "generative" "ai" in:file
-"AIzaSy" "vertex" "ai" in:file
-"AIzaSy" "palm" in:file
-"AIzaSy" "bard" in:file
-
-# API 相关组合
 "AIzaSy" "GEMINI_API_KEY" in:file
-"AIzaSy" "GOOGLE_AI_API_KEY" in:file
-"AIzaSy" "GENERATIVE_AI_API_KEY" in:file
 
-# ===== 第六阶段：时间和大小过滤 =====
+# ========================================
+# OPENAI API
+# ========================================
+# 使用方法: python app/api_key_scanner_super.py --api-types openai
+
+# 基础搜索
+sk- in:file
+sk-proj- in:file
+
+# 环境变量文件
+sk- in:file filename:.env
+sk- in:file filename:.env.local
+sk- in:file filename:.env.production
+OPENAI_API_KEY in:file filename:.env
+
+# 配置文件
+sk- in:file extension:json filename:config
+sk- in:file extension:yaml filename:config
+OPENAI_API_KEY in:file extension:json
+OPENAI_API_KEY in:file extension:yaml
+
+# 编程语言特定
+sk- in:file extension:py "openai"
+sk- in:file extension:js "openai"
+sk- in:file extension:ts "openai"
+OPENAI_API_KEY in:file language:python
+OPENAI_API_KEY in:file language:javascript
+
+# 组合搜索
+"sk-" "openai" in:file
+"sk-" "gpt" in:file
+"OPENAI_API_KEY" "sk-" in:file
+
+# ========================================
+# ANTHROPIC API (Claude)
+# ========================================
+# 使用方法: python app/api_key_scanner_super.py --api-types anthropic
+
+# 基础搜索
+sk-ant in:file
+sk-ant-api in:file
+
+# 环境变量文件
+sk-ant in:file filename:.env
+ANTHROPIC_API_KEY in:file filename:.env
+CLAUDE_API_KEY in:file filename:.env
+
+# 配置文件
+sk-ant in:file extension:json filename:config
+sk-ant in:file extension:yaml filename:config
+ANTHROPIC_API_KEY in:file extension:json
+
+# 编程语言特定
+sk-ant in:file extension:py "anthropic"
+sk-ant in:file extension:js "claude"
+ANTHROPIC_API_KEY in:file language:python
+CLAUDE_API_KEY in:file language:javascript
+
+# 组合搜索
+"sk-ant" "claude" in:file
+"sk-ant" "anthropic" in:file
+"ANTHROPIC_API_KEY" "sk-ant" in:file
+
+# ========================================
+# COHERE API
+# ========================================
+# 使用方法: python app/api_key_scanner_super.py --api-types cohere
+
+# 基础搜索
+co- in:file
+
+# 环境变量文件
+co- in:file filename:.env
+COHERE_API_KEY in:file filename:.env
+
+# 配置文件
+co- in:file extension:json filename:config
+COHERE_API_KEY in:file extension:json
+
+# 编程语言特定
+co- in:file extension:py "cohere"
+COHERE_API_KEY in:file language:python
+
+# ========================================
+# HUGGING FACE API
+# ========================================
+# 使用方法: python app/api_key_scanner_super.py --api-types huggingface
+
+# 基础搜索
+hf_ in:file
+
+# 环境变量文件
+hf_ in:file filename:.env
+HUGGING_FACE_HUB_TOKEN in:file filename:.env
+HF_TOKEN in:file filename:.env
+
+# 配置文件
+hf_ in:file extension:json filename:config
+HF_TOKEN in:file extension:json
+
+# 编程语言特定
+hf_ in:file extension:py "huggingface"
+HF_TOKEN in:file language:python
+
+# ========================================
+# AWS ACCESS KEYS
+# ========================================
+# 使用方法: python app/api_key_scanner_super.py --api-types aws
+
+# 基础搜索
+AKIA in:file
+
+# 环境变量文件
+AKIA in:file filename:.env
+AWS_ACCESS_KEY_ID in:file filename:.env
+AWS_SECRET_ACCESS_KEY in:file filename:.env
+
+# 配置文件
+AKIA in:file extension:json filename:config
+AWS_ACCESS_KEY_ID in:file extension:json
+aws_access_key_id in:file extension:ini
+
+# AWS特定文件
+AKIA in:file filename:credentials
+AKIA in:file filename:.aws/credentials
+AKIA in:file filename:aws-config
+
+# ========================================
+# AZURE OPENAI API
+# ========================================
+# 使用方法: python app/api_key_scanner_super.py --api-types azure
+
+# 基础搜索
+AZURE_OPENAI_KEY in:file
+AZURE_OPENAI_API_KEY in:file
+
+# 环境变量文件
+AZURE_OPENAI_KEY in:file filename:.env
+AZURE_OPENAI_API_KEY in:file filename:.env
+AZURE_OPENAI_ENDPOINT in:file filename:.env
+
+# 配置文件
+AZURE_OPENAI_KEY in:file extension:json filename:config
+azure.openai in:file extension:json
+
+# ========================================
+# 多API组合搜索
+# ========================================
+# 使用方法: python app/api_key_scanner_super.py --api-types gemini,openai,anthropic
+
+# 同时搜索多种API密钥的文件
+"AIzaSy" "sk-" in:file
+"AIzaSy" "sk-ant" in:file
+"GEMINI_API_KEY" "OPENAI_API_KEY" in:file
+
+# 通用API密钥文件
+filename:api_keys.json
+filename:api_keys.txt
+filename:api_keys.env
+filename:secrets.json
+filename:credentials.json
+
+# ========================================
+# 时间和大小过滤（适用于所有API）
+# ========================================
+
 # 最近活跃项目（更可能有有效密钥）
 AIzaSy in:file pushed:>2024-11-01
-AIzaSy in:file pushed:>2024-10-01
-AIzaSy in:file created:>2024-06-01
+sk- in:file pushed:>2024-11-01
+sk-ant in:file pushed:>2024-11-01
 
 # 小文件优先（配置文件通常较小）
 AIzaSy in:file size:<5000
-AIzaSy in:file size:5000..20000
+sk- in:file size:<5000
 
-# 大文件搜索（可能包含多个密钥）
-AIzaSy in:file size:>50000
+# ========================================
+# 特殊搜索策略（适用于所有API）
+# ========================================
 
-# ===== 第七阶段：特定平台和框架 =====
-# React/Next.js 项目
-AIzaSy in:file filename:.env.local "NEXT_PUBLIC"
-AIzaSy in:file filename:next.config.js
-
-# Vue.js 项目
-AIzaSy in:file filename:vue.config.js
-AIzaSy in:file filename:.env.local "VUE_APP"
-
-# Angular 项目
-AIzaSy in:file filename:environment.ts
-AIzaSy in:file filename:environment.prod.ts
-
-# Flutter/Dart 项目
-AIzaSy in:file extension:dart "gemini"
-AIzaSy in:file language:dart filename:config.dart
-
-# Jupyter Notebooks
-AIzaSy in:file extension:ipynb
-
-# ===== 第八阶段：云平台配置 =====
-# AWS 配置
-AIzaSy in:file filename:aws-config
-AIzaSy in:file filename:cloudformation.yml
-
-# Google Cloud 配置
-AIzaSy in:file filename:gcp-config
-AIzaSy in:file filename:service-account.json
-
-# Kubernetes 配置
-AIzaSy in:file filename:deployment.yaml "AIzaSy"
-AIzaSy in:file filename:configmap.yaml
-
-# Terraform 配置
-AIzaSy in:file extension:tf "gemini"
-AIzaSy in:file filename:terraform.tfvars
-
-# ===== 第九阶段：CI/CD 配置文件 =====
-# GitHub Actions
-AIzaSy in:file path:.github/workflows
-
-# GitLab CI
-AIzaSy in:file filename:.gitlab-ci.yml
-
-# Jenkins
-AIzaSy in:file filename:Jenkinsfile
-
-# CircleCI
-AIzaSy in:file filename:circle.yml
-AIzaSy in:file filename:.circleci/config.yml
-
-# ===== 第十阶段：特殊搜索策略 =====
 # 错误配置的公开仓库
 AIzaSy in:file is:public
+sk- in:file is:public
+sk-ant in:file is:public
 
 # Fork 仓库（经常忘记清理密钥）
 AIzaSy in:file fork:true
+sk- in:file fork:true
 
-# 最近提交的文件
-AIzaSy in:file committer-date:>2024-11-01
-
-# 特定用户类型
-AIzaSy in:file user:student
-AIzaSy in:file user:developer
-
-# 高星级项目（可能有更多用户使用泄露的密钥）
+# 高星级项目
 AIzaSy in:file stars:>100
+sk- in:file stars:>100
 
-# 多语言项目
-AIzaSy in:file language:python language:javascript
-
-# ===== 第十一阶段：边缘情况搜索 =====
-# 注释中的密钥
-"# AIzaSy" in:file
-"// AIzaSy" in:file
-"<!-- AIzaSy" in:file
-
-# 日志文件
-AIzaSy in:file extension:log
-AIzaSy in:file filename:debug.log
-
-# 测试文件
-AIzaSy in:file path:test filename:config
-AIzaSy in:file path:tests filename:config
-
-# 示例和演示
-AIzaSy in:file path:examples
-AIzaSy in:file path:demo
-AIzaSy in:file path:sample
-
-# 文档中的真实密钥
-AIzaSy in:file extension:md size:>1000
-AIzaSy in:file filename:README.md "AIzaSy"
+# ========================================
+# 使用说明
+# ========================================
+# 1. 默认扫描Gemini：
+#    python app/api_key_scanner_super.py
+#
+# 2. 扫描特定API：
+#    python app/api_key_scanner_super.py --api-types openai
+#
+# 3. 扫描多个API：
+#    python app/api_key_scanner_super.py --api-types gemini,openai,anthropic
+#
+# 4. 使用环境变量：
+#    在.env中设置 TARGET_API_TYPES=gemini,openai
+#
+# 5. 使用通用扫描器：
+#    python app/api_scanner_universal.py --api-types all

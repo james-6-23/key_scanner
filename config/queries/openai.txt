@@ -1,0 +1,65 @@
+# ========================================
+# OPENAI API 查询模板
+# ========================================
+# 使用: python app/api_key_scanner_super.py --api-types openai
+
+# ===== 基础搜索 =====
+sk- in:file
+sk-proj- in:file
+
+# ===== 环境变量文件 =====
+sk- in:file filename:.env
+sk- in:file filename:.env.local
+sk- in:file filename:.env.production
+sk- in:file filename:.env.development
+OPENAI_API_KEY in:file filename:.env
+OPENAI_KEY in:file filename:.env
+
+# ===== 配置文件 =====
+sk- in:file extension:json filename:config
+sk- in:file extension:json filename:settings
+sk- in:file extension:json filename:secrets
+sk- in:file extension:yaml filename:config
+sk- in:file extension:yml filename:config
+OPENAI_API_KEY in:file extension:json
+OPENAI_API_KEY in:file extension:yaml
+
+# ===== Python项目 =====
+sk- in:file extension:py "openai"
+sk- in:file extension:py "OPENAI_API_KEY"
+OPENAI_API_KEY in:file language:python
+openai.api_key in:file language:python
+sk- in:file language:python filename:config.py
+sk- in:file language:python filename:settings.py
+
+# ===== JavaScript/Node.js项目 =====
+sk- in:file extension:js "openai"
+sk- in:file extension:js "process.env.OPENAI"
+OPENAI_API_KEY in:file language:javascript
+sk- in:file language:javascript filename:config.js
+sk- in:file filename:package.json "openai"
+
+# ===== TypeScript项目 =====
+sk- in:file extension:ts "openai"
+OPENAI_API_KEY in:file language:typescript
+sk- in:file language:typescript filename:config.ts
+
+# ===== 组合关键词搜索 =====
+"sk-" "openai" in:file
+"sk-" "gpt" in:file
+"sk-" "chatgpt" in:file
+"OPENAI_API_KEY" "sk-" in:file
+"openai" "api" "key" in:file
+
+# ===== 时间过滤 =====
+sk- in:file pushed:>2024-11-01
+OPENAI_API_KEY in:file pushed:>2024-10-01
+
+# ===== 文件大小过滤 =====
+sk- in:file size:<5000
+OPENAI_API_KEY in:file size:<10000
+
+# ===== 特殊搜索 =====
+sk- in:file is:public
+sk- in:file fork:true
+sk- in:file stars:>50

@@ -1,0 +1,43 @@
+# ========================================
+# AZURE OPENAI API 查询模板
+# ========================================
+# 使用: python app/api_key_scanner_super.py --api-types azure
+
+# ===== 基础搜索 =====
+AZURE_OPENAI_KEY in:file
+AZURE_OPENAI_API_KEY in:file
+
+# ===== 环境变量文件 =====
+AZURE_OPENAI_KEY in:file filename:.env
+AZURE_OPENAI_API_KEY in:file filename:.env
+AZURE_OPENAI_ENDPOINT in:file filename:.env
+AZURE_API_KEY in:file filename:.env
+
+# ===== 配置文件 =====
+AZURE_OPENAI_KEY in:file extension:json filename:config
+AZURE_OPENAI_API_KEY in:file extension:json
+azure.openai in:file extension:json
+AZURE_OPENAI_KEY in:file extension:yaml
+
+# ===== Python项目 =====
+AZURE_OPENAI_KEY in:file extension:py "azure"
+AZURE_OPENAI_API_KEY in:file language:python
+azure.openai in:file language:python
+
+# ===== JavaScript项目 =====
+AZURE_OPENAI_KEY in:file extension:js "azure"
+AZURE_OPENAI_API_KEY in:file language:javascript
+
+# ===== .NET项目 =====
+AZURE_OPENAI_KEY in:file filename:appsettings.json
+Azure.OpenAI in:file extension:cs
+
+# ===== 组合搜索 =====
+"AZURE_OPENAI" "endpoint" in:file
+"azure" "openai" "key" in:file
+
+# ===== 时间过滤 =====
+AZURE_OPENAI_KEY in:file pushed:>2024-11-01
+
+# ===== 特殊搜索 =====
+AZURE_OPENAI_KEY in:file is:public

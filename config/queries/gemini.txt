@@ -1,0 +1,79 @@
+# ========================================
+# GEMINI API (Google) 查询模板
+# ========================================
+# 默认使用此文件进行扫描
+
+# ===== 基础搜索 =====
+AIzaSy in:file
+
+# ===== 环境变量文件 =====
+AIzaSy in:file filename:.env
+AIzaSy in:file filename:.env.local
+AIzaSy in:file filename:.env.production
+AIzaSy in:file filename:.env.development
+AIzaSy in:file filename:.env.staging
+AIzaSy in:file filename:.env.example
+AIzaSy in:file filename:.env.sample
+AIzaSy in:file filename:.env.template
+
+# ===== Docker配置 =====
+AIzaSy in:file filename:docker-compose.yml
+AIzaSy in:file filename:docker-compose.yaml
+AIzaSy in:file filename:Dockerfile
+
+# ===== JSON配置文件 =====
+AIzaSy in:file extension:json filename:config
+AIzaSy in:file extension:json filename:settings
+AIzaSy in:file extension:json filename:secrets
+AIzaSy in:file extension:json filename:credentials
+AIzaSy in:file extension:json filename:keys
+AIzaSy in:file extension:json filename:api
+
+# ===== YAML配置文件 =====
+AIzaSy in:file extension:yaml filename:config
+AIzaSy in:file extension:yml filename:config
+AIzaSy in:file extension:yaml filename:secrets
+AIzaSy in:file extension:yml filename:secrets
+
+# ===== Python项目 =====
+AIzaSy in:file extension:py "GEMINI_API_KEY"
+AIzaSy in:file extension:py "gemini_api_key"
+AIzaSy in:file extension:py "GOOGLE_API_KEY"
+AIzaSy in:file language:python filename:config.py
+AIzaSy in:file language:python filename:settings.py
+AIzaSy in:file language:python filename:secrets.py
+AIzaSy in:file language:python filename:constants.py
+
+# ===== JavaScript/Node.js项目 =====
+AIzaSy in:file extension:js "GEMINI_API_KEY"
+AIzaSy in:file extension:js "process.env"
+AIzaSy in:file language:javascript filename:config.js
+AIzaSy in:file language:javascript filename:constants.js
+AIzaSy in:file filename:package.json "AIzaSy"
+
+# ===== TypeScript项目 =====
+AIzaSy in:file extension:ts "GEMINI_API_KEY"
+AIzaSy in:file language:typescript filename:config.ts
+AIzaSy in:file language:typescript filename:constants.ts
+
+# ===== 组合关键词搜索 =====
+"AIzaSy" "gemini" in:file
+"AIzaSy" "google" "api" in:file
+"AIzaSy" "generative" "ai" in:file
+"AIzaSy" "vertex" "ai" in:file
+"AIzaSy" "GEMINI_API_KEY" in:file
+"AIzaSy" "GOOGLE_AI_API_KEY" in:file
+
+# ===== 时间过滤（最近活跃） =====
+AIzaSy in:file pushed:>2024-11-01
+AIzaSy in:file pushed:>2024-10-01
+AIzaSy in:file created:>2024-06-01
+
+# ===== 文件大小过滤 =====
+AIzaSy in:file size:<5000
+AIzaSy in:file size:5000..20000
+
+# ===== 特殊搜索 =====
+AIzaSy in:file is:public
+AIzaSy in:file fork:true
+AIzaSy in:file stars:>100
