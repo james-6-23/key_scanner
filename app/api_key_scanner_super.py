@@ -49,7 +49,7 @@ from utils.github_client_enhanced import EnhancedGitHubClient
 from app.api_scanner_universal import UniversalAPIScanner
 
 # 配置日志
-logger = Logger.get_logger("api_key_scanner_super")
+# logger = Logger.get_logger("api_key_scanner_super")
 
 
 class SuperAPIKeyScanner:
