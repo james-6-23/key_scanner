@@ -98,12 +98,35 @@ except ImportError as e:
     print(f"[X] utils.parallel_validator: {e}")
     errors.append(str(e))
 
-# 测试凭证管理器（可选）
+# 测试凭证管理器
 try:
-    from credential_manager import CredentialManager
-    print("[OK] credential_manager")
+    from credential_manager.core.manager import get_credential_manager
+    print("[OK] credential_manager.core.manager")
 except ImportError as e:
-    print("[!] credential_manager (可选): {e}")
+    print(f"[X] credential_manager.core.manager: {e}")
+    errors.append(str(e))
+
+try:
+    from credential_manager.core.models import ServiceType, CredentialStatus
+    print("[OK] credential_manager.core.models")
+except ImportError as e:
+    print(f"[X] credential_manager.core.models: {e}")
+    errors.append(str(e))
+
+try:
+    from credential_manager.integration.credential_bridge import CredentialBridge
+    print("[OK] credential_manager.integration.credential_bridge")
+except ImportError as e:
+    print(f"[X] credential_manager.integration.credential_bridge: {e}")
+    errors.append(str(e))
+
+# 测试增强版GitHub客户端
+try:
+    from utils.github_client_enhanced import EnhancedGitHubClient
+    print("[OK] utils.github_client_enhanced")
+except ImportError as e:
+    print(f"[X] utils.github_client_enhanced: {e}")
+    errors.append(str(e))
 
 sys.exit(0 if not errors else 1)
 """
@@ -111,6 +134,109 @@ sys.exit(0 if not errors else 1)
     result = subprocess.run([sys.executable, "-c", test_script], 
                           capture_output=True, text=True, cwd=Path.cwd())
     print(result.stdout)
+    
+    return result.returncode == 0
+
+def test_credential_manager():
+    """测试凭证管理器功能"""
+    print(f"\n{Colors.BOLD}测试凭证管理器:{Colors.RESET}")
+    
+    test_script = """
+import sys
+from pathlib import Path
+sys.path.insert(0, str(Path.cwd()))
+
+try:
+    # 测试凭证管理器初始化
+    from credential_manager.core.manager import get_credential_manager
+    from credential_manager.core.models import ServiceType
+    
+    config = {
+        'encryption_enabled': False,
+        'balancing_strategy': 'round_robin',
+        'min_pool_size': 1,
+        'max_pool_size': 10
+    }
+    
+    manager = get_credential_manager(config)
+    print("[OK] 凭证管理器初始化成功")
+    
+    # 测试get_statistics方法
+    if hasattr(manager, 'get_statistics'):
+        stats = manager.get_statistics()
+        print("[OK] get_statistics方法存在")
+    else:
+        print("[X] get_statistics方法缺失")
+    
+    # 测试ServiceType枚举
+    if hasattr(ServiceType, 'GCP'):
+        print("[OK] ServiceType.GCP存在")
+    else:
+        print("[X] ServiceType.GCP缺失")
+        
+except Exception as e:
+    print(f"[X] 凭证管理器测试失败: {e}")
+    import traceback
+    traceback.print_exc()
+"""
+    
+    result = subprocess.run([sys.executable, "-c", test_script],
+                          capture_output=True, text=True, cwd=Path.cwd())
+    print(result.stdout)
+    if result.stderr:
+        print(f"{Colors.RED}错误输出:{Colors.RESET}")
+        print(result.stderr)
+    
+    return result.returncode == 0
+
+def test_enhanced_github_client():
+    """测试增强版GitHub客户端"""
+    print(f"\n{Colors.BOLD}测试增强版GitHub客户端:{Colors.RESET}")
+    
+    test_script = """
+import sys
+from pathlib import Path
+sys.path.insert(0, str(Path.cwd()))
+
+try:
+    from utils.github_client_enhanced import EnhancedGitHubClient
+    
+    # 创建实例
+    client = EnhancedGitHubClient(use_credential_manager=False)
+    print("[OK] EnhancedGitHubClient实例化成功")
+    
+    # 检查新方法
+    if hasattr(client, 'search_repositories'):
+        print("[OK] search_repositories方法存在")
+    else:
+        print("[X] search_repositories方法缺失")
+    
+    if hasattr(client, 'search_in_repository'):
+        print("[OK] search_in_repository方法存在")
+    else:
+        print("[X] search_in_repository方法缺失")
+    
+    if hasattr(client, 'get_file_content'):
+        # 检查是否有异步版本
+        import inspect
+        if any(param == 'repo_name' for param in inspect.signature(client.get_file_content).parameters):
+            print("[OK] get_file_content异步版本存在")
+        print("[OK] get_file_content方法存在")
+    else:
+        print("[X] get_file_content方法缺失")
+        
+except Exception as e:
+    print(f"[X] GitHub客户端测试失败: {e}")
+    import traceback
+    traceback.print_exc()
+"""
+    
+    result = subprocess.run([sys.executable, "-c", test_script],
+                          capture_output=True, text=True, cwd=Path.cwd())
+    print(result.stdout)
+    if result.stderr:
+        print(f"{Colors.RED}错误输出:{Colors.RESET}")
+        print(result.stderr)
     
     return result.returncode == 0
 
@@ -144,6 +270,19 @@ try:
         print("[OK] 找到main函数")
     else:
         print("[X] 缺少main函数")
+    
+    # 测试SuperAPIKeyScanner类
+    if hasattr(scanner, 'SuperAPIKeyScanner'):
+        print("[OK] 找到SuperAPIKeyScanner类")
+        
+        # 尝试实例化
+        try:
+            instance = scanner.SuperAPIKeyScanner(['gemini'])
+            print("[OK] SuperAPIKeyScanner实例化成功")
+        except Exception as e:
+            print(f"[X] SuperAPIKeyScanner实例化失败: {e}")
+    else:
+        print("[X] 缺少SuperAPIKeyScanner类")
         
 except ImportError as e:
     print(f"[X] 导入失败: {e}")
@@ -285,6 +424,18 @@ def suggest_fixes(issues):
         print("  1. 检查Python版本 (需要3.8+)")
         print("  2. 检查环境变量配置")
         print("  3. 尝试直接运行: python app/api_key_scanner.py (基础版)")
+    
+    if "credential_manager" in issues:
+        print(f"{Colors.YELLOW}凭证管理器问题:{Colors.RESET}")
+        print("  1. 检查credential_manager目录结构")
+        print("  2. 确保所有__init__.py文件存在")
+        print("  3. 检查ServiceType枚举是否包含所有必需的服务类型")
+    
+    if "github_client" in issues:
+        print(f"{Colors.YELLOW}GitHub客户端问题:{Colors.RESET}")
+        print("  1. 检查utils/github_client_enhanced.py文件")
+        print("  2. 确保search_repositories和search_in_repository方法存在")
+        print("  3. 检查异步方法实现")
 
 def main():
     """主函数"""
@@ -304,6 +455,12 @@ def main():
     
     if not check_api_config():
         issues.append("config")
+    
+    if not test_credential_manager():
+        issues.append("credential_manager")
+    
+    if not test_enhanced_github_client():
+        issues.append("github_client")
     
     if not test_super_scanner():
         issues.append("runtime")
