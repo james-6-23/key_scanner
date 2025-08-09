@@ -17,14 +17,21 @@ def check_config():
     print("🔍 检查 .env 配置文件")
     print("=" * 60)
     
-    # 必需的配置项
+    # 检查是否使用外部文件
+    use_external = os.getenv('USE_EXTERNAL_TOKEN_FILE', 'false').lower() in ('true', '1', 'yes')
+    
+    # 必需的配置项（根据模式动态调整）
     required_configs = {
-        'GITHUB_TOKENS': '环境变量中的GitHub tokens（如果USE_EXTERNAL_TOKEN_FILE=false）',
-        'GITHUB_TOKENS_FILE': 'GitHub tokens文件路径',
         'USE_EXTERNAL_TOKEN_FILE': '是否使用外部token文件',
         'DATA_PATH': '数据存储路径',
         'QUERIES_FILE': '查询文件路径',
     }
+    
+    # 根据模式添加必需的配置
+    if use_external:
+        required_configs['GITHUB_TOKENS_FILE'] = 'GitHub tokens文件路径'
+    else:
+        required_configs['GITHUB_TOKENS'] = '环境变量中的GitHub tokens'
     
     # 重要的配置项
     important_configs = {
@@ -41,7 +48,12 @@ def check_config():
     for key, desc in required_configs.items():
         value = os.getenv(key)
         if value:
-            print(f"  {key}: {value[:50]}{'...' if len(str(value)) > 50 else ''}")
+            # 对于敏感信息只显示部分
+            if key == 'GITHUB_TOKENS' and len(value) > 20:
+                display_value = f"{value[:10]}...{value[-10:]}"
+            else:
+                display_value = value[:50] + ('...' if len(str(value)) > 50 else '')
+            print(f"  {key}: {display_value}")
         else:
             print(f"  {key}: ❌ 未设置 ({desc})")
             missing_required.append(key)
@@ -58,7 +70,6 @@ def check_config():
     print("\n📁 文件检查：")
     
     # 检查 token 文件
-    use_external = os.getenv('USE_EXTERNAL_TOKEN_FILE', 'false').lower() in ('true', '1', 'yes')
     if use_external:
         token_file = os.getenv('GITHUB_TOKENS_FILE', 'github_tokens.txt')
         if Path(token_file).exists():
@@ -67,6 +78,15 @@ def check_config():
             print(f"  {token_file}: ✅ 存在 ({token_count} 个tokens)")
         else:
             print(f"  {token_file}: ❌ 不存在")
+            missing_required.append('GITHUB_TOKENS_FILE')
+    else:
+        # 检查环境变量中的 tokens
+        env_tokens = os.getenv('GITHUB_TOKENS', '')
+        if env_tokens:
+            token_count = len([t for t in env_tokens.split(',') if t.strip()])
+            print(f"  GITHUB_TOKENS (env): ✅ 配置了 {token_count} 个tokens")
+        else:
+            print(f"  GITHUB_TOKENS (env): ❌ 未配置")
     
     # 检查查询文件
     queries_file = os.getenv('QUERIES_FILE', 'queries.txt')
@@ -110,11 +130,34 @@ def check_config():
     
     print("\n" + "=" * 60)
     
+    # 显示 .env 文件位置
+    print("\n📄 配置文件信息：")
+    env_path = Path('.env')
+    if env_path.exists():
+        print(f"  .env 文件: ✅ 存在 (大小: {env_path.stat().st_size} 字节)")
+        # 显示文件的前几行（不包含敏感信息）
+        print("  前5行内容预览：")
+        with open('.env', 'r') as f:
+            for i, line in enumerate(f):
+                if i >= 5:
+                    break
+                # 隐藏敏感信息
+                if '=' in line and not line.strip().startswith('#'):
+                    key, value = line.split('=', 1)
+                    if any(sensitive in key.upper() for sensitive in ['TOKEN', 'KEY', 'AUTH', 'PASSWORD']):
+                        print(f"    {key.strip()}=***")
+                    else:
+                        print(f"    {line.strip()[:60]}{'...' if len(line.strip()) > 60 else ''}")
+                else:
+                    print(f"    {line.strip()[:60]}{'...' if len(line.strip()) > 60 else ''}")
+    else:
+        print(f"  .env 文件: ❌ 不存在")
+    
     if missing_required:
-        print("❌ 缺少必需的配置项，请检查 .env 文件")
+        print("\n❌ 缺少必需的配置项，请检查 .env 文件")
         return False
     else:
-        print("✅ 配置检查通过")
+        print("\n✅ 配置检查通过")
         return True
 
 if __name__ == "__main__":
